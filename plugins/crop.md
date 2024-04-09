@@ -1,7 +1,7 @@
 # crop
 
-* accepts: idc.api.ImageClassificationData, idc.api.ObjectDetectionData
-* generates: idc.api.ImageClassificationData, idc.api.ObjectDetectionData
+* accepts: idc.api.ImageClassificationData, idc.api.ObjectDetectionData, idc.api.ImageSegmentationData
+* generates: idc.api.ImageClassificationData, idc.api.ObjectDetectionData, idc.api.ImageSegmentationData
 
 Crops images.
 
