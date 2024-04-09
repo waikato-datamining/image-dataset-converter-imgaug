@@ -66,7 +66,7 @@ class Crop(BaseImageAugmentation):
         :return: the list of classes
         :rtype: list
         """
-        return [ImageData]
+        return [ImageClassificationData, ObjectDetectionData]
 
     def generates(self) -> List:
         """
