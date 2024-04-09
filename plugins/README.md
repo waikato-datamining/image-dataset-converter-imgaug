@@ -5,3 +5,4 @@
 * [gaussian-blur](gaussian-blur.md)
 * [linear-contrast](linear-contrast.md)
 * [rotate](rotate.md)
+* [scale](scale.md)
