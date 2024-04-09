@@ -8,7 +8,7 @@ Extracts sub-images (incl their annotations) from the images coming through, usi
 ```
 usage: sub-images [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
                   [-N LOGGER_NAME] -r REGIONS [REGIONS ...]
-                  [-s {none,x-then-y,y-then-x}] [-p] [-e]
+                  [-s {none,x-then-y,y-then-x}] [-p] [-e] [-S SUFFIX]
 
 Extracts sub-images (incl their annotations) from the images coming through,
 using the defined regions.
@@ -32,4 +32,9 @@ optional arguments:
                         into a region or also partial ones (default: False)
   -e, --suppress_empty  Suppresses sub-images that have no annotations (object
                         detection) (default: False)
+  -S SUFFIX, --suffix SUFFIX
+                        The suffix pattern to use for the generated sub-
+                        images, available placeholders:
+                        {X}|{Y}|{W}|{H}|{X0}|{Y0}|{X1}|{Y1}|{INDEX} (default:
+                        -{INDEX})
 ```

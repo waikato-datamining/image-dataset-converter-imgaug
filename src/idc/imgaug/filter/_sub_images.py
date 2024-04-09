@@ -21,6 +21,29 @@ REGION_SORTING = [
     REGION_SORTING_YX,
 ]
 
+PH_X = "{X}"
+PH_Y = "{Y}"
+PH_W = "{W}"
+PH_H = "{H}"
+PH_X0 = "{X0}"
+PH_Y0 = "{Y0}"
+PH_X1 = "{X1}"
+PH_Y1 = "{Y1}"
+PH_INDEX = "{INDEX}"
+PLACEHOLDERS = [
+    PH_X,
+    PH_Y,
+    PH_W,
+    PH_H,
+    PH_X0,
+    PH_Y0,
+    PH_X1,
+    PH_Y1,
+    PH_INDEX,
+]
+
+DEFAULT_SUFFIX = "-{INDEX}"
+
 
 class SubImages(Filter):
     """
@@ -28,7 +51,7 @@ class SubImages(Filter):
     """
 
     def __init__(self, regions: List[str] = None, region_sorting: str = REGION_SORTING_NONE,
-                 include_partial: bool = False, suppress_empty: bool = False,
+                 include_partial: bool = False, suppress_empty: bool = False, suffix: str = DEFAULT_SUFFIX,
                  logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initializes the filter.
@@ -41,6 +64,8 @@ class SubImages(Filter):
         :type include_partial: bool
         :param suppress_empty: suppresses sub-images that have no annotations (object detection)
         :type suppress_empty: bool
+        :param suffix: the suffix pattern to use for the generated sub-images (with placeholders)
+        :type suffix: str
         :param logger_name: the name to use for the logger
         :type logger_name: str
         :param logging_level: the logging level to use
@@ -51,6 +76,7 @@ class SubImages(Filter):
         self.region_sorting = region_sorting
         self.include_partial = include_partial
         self.suppress_empty = suppress_empty
+        self.suffix = suffix
         self._regions_xyxy = None
         self._region_lobjs = None
 
@@ -102,6 +128,7 @@ class SubImages(Filter):
         parser.add_argument("-s", "--region_sorting", choices=REGION_SORTING, default=REGION_SORTING_NONE, help="How to sort the supplied region definitions", required=False)
         parser.add_argument("-p", "--include_partial", action="store_true", help="Whether to include only annotations that fit fully into a region or also partial ones", required=False)
         parser.add_argument("-e", "--suppress_empty", action="store_true", help="Suppresses sub-images that have no annotations (object detection)", required=False)
+        parser.add_argument("-S", "--suffix", type=str, default=DEFAULT_SUFFIX, help="The suffix pattern to use for the generated sub-images, available placeholders: " + "|".join(PLACEHOLDERS), required=False)
         return parser
 
     def _apply_args(self, ns: argparse.Namespace):
@@ -116,6 +143,7 @@ class SubImages(Filter):
         self.region_sorting = ns.region_sorting
         self.include_partial = ns.include_partial
         self.suppress_empty = ns.suppress_empty
+        self.suffix = ns.suffix
 
     def initialize(self):
         """
@@ -131,6 +159,8 @@ class SubImages(Filter):
             self.include_partial = False
         if self.suppress_empty is None:
             self.suppress_empty = False
+        if self.suffix is None:
+            self.suffix = DEFAULT_SUFFIX
 
         self._regions_xyxy = []
         self._region_lobjs = []
@@ -158,20 +188,31 @@ class SubImages(Filter):
             self._regions_xyxy.append((lobj.x, lobj.y, lobj.x + lobj.width - 1, lobj.y + lobj.height - 1))
         self.logger().info("sorted xyxy: %s" % str(self._regions_xyxy))
 
-    def _new_filename(self, filename: str, index: int) -> str:
+    def _new_filename(self, path: str, index: int) -> str:
         """
         Generates a new filename based on the original and the index of the region.
 
-        :param filename: the base filename
-        :type filename: str
+        :param path: the base filename
+        :type path: str
         :param index: the region index
         :type index: int
         :return: the generated filename
         :rtype: str
         """
-        parts = os.path.splitext(filename)
-        pattern = "-%0" + str(len(str(len(self._region_lobjs)))) + "d"
-        return parts[0] + pattern % index + parts[1]
+        parts = os.path.splitext(path)
+        index_pattern = "-%0" + str(len(str(len(self._region_lobjs)))) + "d"
+        index_str = index_pattern % index
+        suffix = self.suffix
+        suffix = suffix.replace(PH_INDEX, index_str)
+        suffix = suffix.replace(PH_X0, str(self._regions_xyxy[index][0]))
+        suffix = suffix.replace(PH_Y0, str(self._regions_xyxy[index][1]))
+        suffix = suffix.replace(PH_X1, str(self._regions_xyxy[index][2]))
+        suffix = suffix.replace(PH_Y1, str(self._regions_xyxy[index][3]))
+        suffix = suffix.replace(PH_X, str(self._region_lobjs[index].x))
+        suffix = suffix.replace(PH_Y, str(self._region_lobjs[index].y))
+        suffix = suffix.replace(PH_W, str(self._region_lobjs[index].width))
+        suffix = suffix.replace(PH_H, str(self._region_lobjs[index].height))
+        return parts[0] + suffix + parts[1]
 
     def _bbox_to_shapely(self, lobj: LocatedObject) -> Polygon:
         """
