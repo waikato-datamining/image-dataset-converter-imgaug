@@ -3,6 +3,7 @@ from ._base_image_augmentation import BaseImageAugmentation
 from ._crop import Crop
 from ._flip import Flip
 from ._gaussian_blur import GaussianBlur
+from ._hsl_grayscale import HSLGrayScale
 from ._linear_contrast import LinearContrast
 from ._rotate import Rotate
 from ._scale import Scale
