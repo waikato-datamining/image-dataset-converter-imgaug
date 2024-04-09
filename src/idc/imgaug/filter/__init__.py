@@ -4,3 +4,4 @@ from ._crop import Crop
 from ._flip import Flip
 from ._gaussian_blur import GaussianBlur
 from ._linear_contrast import LinearContrast
+from ._rotate import Rotate
