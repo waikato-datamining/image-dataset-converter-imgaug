@@ -1,4 +1,4 @@
-# image-dataset-converter plugins
+# imgaug plugins
 ## Filters
 * [crop](crop.md)
 * [flip](flip.md)
@@ -7,3 +7,4 @@
 * [linear-contrast](linear-contrast.md)
 * [rotate](rotate.md)
 * [scale](scale.md)
+* [sub-images](sub-images.md)
