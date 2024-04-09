@@ -29,6 +29,12 @@ class Crop(BaseImageAugmentation):
         :type seed_augmentation: bool
         :param threshold: the threshold to use for Random.rand(): if equal or above, augmentation gets applied; range: 0-1; default: 0 (= always)
         :type threshold: float
+        :param from_percent: the minimum percent to crop from images (0-1)
+        :type from_percent: float
+        :param to_percent: the maximum percent to crop from images (0-1)
+        :type to_percent: float
+        :param update_size: whether to update the image size after the crop operation or scale back to original size
+        :type update_size: bool
         :param logger_name: the name to use for the logger
         :type logger_name: str
         :param logging_level: the logging level to use
