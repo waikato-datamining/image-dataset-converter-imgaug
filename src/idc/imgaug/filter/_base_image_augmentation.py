@@ -7,12 +7,13 @@ import numpy as np
 from PIL import Image
 from imgaug.augmentables.bbs import BoundingBox, BoundingBoxesOnImage
 from imgaug.augmentables.polys import Polygon, PolygonsOnImage
+from imgaug.augmentables.segmaps import SegmentationMapsOnImage
 from wai.common.adams.imaging.locateobjects import LocatedObjects, absolute_to_normalized
 from wai.common.geometry import Point as WaiPoint
 from wai.common.geometry import Polygon as WaiPolygon
 from wai.logging import LOGGING_WARNING
 
-from idc.api import ImageData, ObjectDetectionData
+from idc.api import ImageData, ObjectDetectionData, ImageSegmentationData, combine_layers, split_layers
 from ._base_filter import BaseFilter, IMGAUG_MODE_REPLACE
 
 
@@ -80,8 +81,11 @@ class BaseImageAugmentation(BaseFilter, abc.ABC):
         # convert annotations
         bboxesoi = None
         polysoi = None
+        imgsegmap = None
         normalized = False
         annotation = item.annotation
+
+        # object detection
         if isinstance(item, ObjectDetectionData):
             normalized = item.is_normalized()
             annotation = item.get_absolute()
@@ -108,19 +112,27 @@ class BaseImageAugmentation(BaseFilter, abc.ABC):
                     bboxes.append(bbox)
                 bboxesoi = BoundingBoxesOnImage(bboxes, shape=image.shape)
 
+        # image segmentation
+        elif isinstance(item, ImageSegmentationData):
+            combined = combine_layers(item)
+            imgsegmap = SegmentationMapsOnImage(combined, shape=(item.image_height, item.image_width))
+
         # augment
         bbs_aug = None
         polys_aug = None
+        imgsegmap_aug = None
         if bboxesoi is not None:
             image_aug, bbs_aug = seq(image=image, bounding_boxes=bboxesoi)
         elif polysoi is not None:
             image_aug, polys_aug = seq(image=image, polygons=polysoi)
+        elif imgsegmap is not None:
+            image_aug, imgsegmap_aug = seq(image=image, segmentation_maps=imgsegmap)
         else:
             image_aug = seq(image=image)
 
         # update annotations
         objs_aug = None
-        annotations_new = annotation
+        annotation_new = annotation
         if bbs_aug is not None:
             objs_aug = []
             for i, bbox in enumerate(bbs_aug):
@@ -136,7 +148,7 @@ class BaseImageAugmentation(BaseFilter, abc.ABC):
                 obj_aug.width = bbox.x2 - bbox.x1 + 1
                 obj_aug.height = bbox.y2 - bbox.y1 + 1
                 objs_aug.append(obj_aug)
-                annotations_new = LocatedObjects(objs_aug)
+                annotation_new = LocatedObjects(objs_aug)
         elif polys_aug is not None:
             objs_aug = []
             for i, poly in enumerate(polys_aug):
@@ -160,11 +172,13 @@ class BaseImageAugmentation(BaseFilter, abc.ABC):
                         points.append(WaiPoint((int(row[0])), int(row[1])))
                     obj_aug.set_polygon(WaiPolygon(*points))
                     objs_aug.append(obj_aug)
-            annotations_new = LocatedObjects(objs_aug)
+            annotation_new = LocatedObjects(objs_aug)
+        elif imgsegmap_aug is not None:
+            annotation_new = split_layers(imgsegmap_aug.get_arr(), annotation.labels)
 
         # convert back to normalized space?
         if (objs_aug is not None) and normalized:
-            annotations_new = absolute_to_normalized(annotations_new, item.image_width, item.image_height)
+            annotation_new = absolute_to_normalized(annotation_new, item.image_width, item.image_height)
 
         img_new = Image.fromarray(np.uint8(image_aug))
         img_new_bytes = io.BytesIO()
@@ -172,5 +186,5 @@ class BaseImageAugmentation(BaseFilter, abc.ABC):
 
         result = type(item)(image_name=image_name, data=img_new_bytes.getvalue(),
                             image_format=item.image_format,
-                            metadata=item.get_metadata(), annotation=annotations_new)
+                            metadata=item.get_metadata(), annotation=annotation_new)
         return result

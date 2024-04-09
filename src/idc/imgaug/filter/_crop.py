@@ -3,7 +3,7 @@ from typing import List
 
 from ._base_image_augmentation import BaseImageAugmentation, IMGAUG_MODE_REPLACE
 from wai.logging import LOGGING_WARNING
-from idc.api import ImageData, ImageClassificationData, ObjectDetectionData
+from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData
 import imgaug.augmenters as iaa
 
 
@@ -66,7 +66,7 @@ class Crop(BaseImageAugmentation):
         :return: the list of classes
         :rtype: list
         """
-        return [ImageClassificationData, ObjectDetectionData]
+        return [ImageClassificationData, ObjectDetectionData, ImageSegmentationData]
 
     def generates(self) -> List:
         """
@@ -75,7 +75,7 @@ class Crop(BaseImageAugmentation):
         :return: the list of classes
         :rtype: list
         """
-        return [ImageClassificationData, ObjectDetectionData]
+        return [ImageClassificationData, ObjectDetectionData, ImageSegmentationData]
 
     def _create_argparser(self) -> argparse.ArgumentParser:
         """
