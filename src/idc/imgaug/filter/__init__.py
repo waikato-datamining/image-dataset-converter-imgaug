@@ -5,6 +5,7 @@ from ._flip import Flip
 from ._gaussian_blur import GaussianBlur
 from ._hsl_grayscale import HSLGrayScale
 from ._linear_contrast import LinearContrast
+from ._meta_sub_images import MetaSubImages
 from ._rotate import Rotate
 from ._scale import Scale
 from ._sub_images import SubImages
