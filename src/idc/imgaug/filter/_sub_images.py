@@ -247,7 +247,7 @@ class SubImages(Filter):
         coords.append((x_list[0], y_list[0]))
         return Polygon(coords)
 
-    def _fit_annotation(self, index: int, region: LocatedObject, annotation: LocatedObject) -> LocatedObject:
+    def _fit_located_object(self, index: int, region: LocatedObject, annotation: LocatedObject) -> LocatedObject:
         """
         Fits the annotation into the specified region, adjusts size if necessary.
 
@@ -326,7 +326,7 @@ class SubImages(Filter):
                     for ann_lobj in item.annotation:
                         ratio = region_lobj.overlap_ratio(ann_lobj)
                         if ((ratio > 0) and self.include_partial) or (ratio >= 1):
-                            new_objects.append(self._fit_annotation(region_index, region_lobj, ann_lobj))
+                            new_objects.append(self._fit_located_object(region_index, region_lobj, ann_lobj))
                     if not self.suppress_empty or (len(new_objects) > 0):
                         item_new = ObjectDetectionData(image_name=image_name_new, data=sub_bytes.getvalue(),
                                                        annotation=LocatedObjects(new_objects), metadata=item.get_metadata())
