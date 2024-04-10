@@ -40,6 +40,9 @@ setup(
     author='Peter Reutemann',
     author_email='fracpete@waikato.ac.nz',
     entry_points={
+        "console_scripts": [
+            "idc-generate-regions=idc.tool.generate_regions:sys_main",
+        ],
         "idc.filters": [
             "idc_imgaug_filters1=idc.imgaug.filter:seppl.io.Filter",
         ],
