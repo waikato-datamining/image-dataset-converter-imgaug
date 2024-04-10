@@ -85,7 +85,7 @@ class BaseImageAugmentation(BaseFilter, abc.ABC):
         normalized = False
         annotation = item.annotation
 
-        if annotation is not None:
+        if item.has_annotation():
             # object detection
             if isinstance(item, ObjectDetectionData):
                 normalized = item.is_normalized()
