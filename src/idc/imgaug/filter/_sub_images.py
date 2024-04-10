@@ -139,13 +139,13 @@ class SubImages(Filter):
         result = []
 
         for item in make_list(data):
-            new_items = process_image(item, self._regions_lobj, self._regions_xyxy, self.suffix,
+            sub_items = process_image(item, self._regions_lobj, self._regions_xyxy, self.suffix,
                                       self.suppress_empty, self.include_partial, self.logger())
             # failed to process?
-            if new_items is None:
+            if sub_items is None:
                 result.append(item)
             else:
-                for region, new_item in new_items:
-                    result.append(new_item)
+                for region, sub_item in sub_items:
+                    result.append(sub_item)
 
         return flatten_list(result)
