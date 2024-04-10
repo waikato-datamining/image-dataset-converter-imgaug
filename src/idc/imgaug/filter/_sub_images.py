@@ -1,14 +1,12 @@
 import argparse
-import io
-
 from typing import List
 
 from seppl.io import Filter
 from wai.logging import LOGGING_WARNING
-from wai.common.adams.imaging.locateobjects import LocatedObjects
+
 from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, flatten_list, make_list
 from idc.imgaug.filter._sub_images_utils import REGION_SORTING_NONE, REGION_SORTING, PLACEHOLDERS, DEFAULT_SUFFIX, \
-    parse_regions, region_filename, fit_located_object, fit_layers
+    parse_regions, process_image
 
 
 class SubImages(Filter):
@@ -129,7 +127,7 @@ class SubImages(Filter):
         if self.suffix is None:
             self.suffix = DEFAULT_SUFFIX
 
-        self._regions_xyxy, self._regions_lobj = parse_regions(self.regions, self.region_sorting, self.logger())
+        self._regions_lobj, self._regions_xyxy = parse_regions(self.regions, self.region_sorting, self.logger())
 
     def _do_process(self, data):
         """
@@ -141,46 +139,13 @@ class SubImages(Filter):
         result = []
 
         for item in make_list(data):
-            pil = item.image
-            for region_index, region_xyxy in enumerate(self._regions_xyxy):
-                self.logger().info("Applying region %d :%s" % (region_index, str(region_xyxy)))
-
-                # crop image
-                x0, y0, x1, y1 = region_xyxy
-                if x1 > item.image_width:
-                    x1 = item.image_width
-                if y1 > item.image_height:
-                    y1 = item.image_height
-                sub_image = pil.crop((x0, y0, x1, y1))
-                sub_bytes = io.BytesIO()
-                sub_image.save(sub_bytes, format=item.image_format)
-                image_name_new = region_filename(item.image_name, self._regions_lobj, self._regions_xyxy, region_index, self.suffix)
-
-                # crop annotations and forward
-                region_lobj = self._regions_lobj[region_index]
-                if isinstance(item, ImageClassificationData):
-                    item_new = ImageClassificationData(image_name=image_name_new, data=sub_bytes.getvalue(),
-                                                       annotation=item.annotation, metadata=item.get_metadata())
-                    result.append(item_new)
-                elif isinstance(item, ObjectDetectionData):
-                    new_objects = []
-                    for ann_lobj in item.annotation:
-                        ratio = region_lobj.overlap_ratio(ann_lobj)
-                        if ((ratio > 0) and self.include_partial) or (ratio >= 1):
-                            new_objects.append(fit_located_object(region_index, region_lobj, ann_lobj, self.logger()))
-                    if not self.suppress_empty or (len(new_objects) > 0):
-                        item_new = ObjectDetectionData(image_name=image_name_new, data=sub_bytes.getvalue(),
-                                                       annotation=LocatedObjects(new_objects), metadata=item.get_metadata())
-                        result.append(item_new)
-                elif isinstance(item, ImageSegmentationData):
-                    new_annotations = fit_layers(region_lobj, item.annotation, self.suppress_empty)
-                    if not self.suppress_empty or (len(new_annotations.layers) > 0):
-                        item_new = ImageSegmentationData(image_name=image_name_new, data=sub_bytes.getvalue(),
-                                                         annotation=new_annotations, metadata=item.get_metadata())
-                        result.append(item_new)
-                else:
-                    self.logger().warning("Unhandled data (%s), skipping!" % str(type(item)))
-                    result.append(item)
-                    break
+            new_items = process_image(item, self._regions_lobj, self._regions_xyxy, self.suffix,
+                                      self.suppress_empty, self.include_partial, self.logger())
+            # failed to process?
+            if new_items is None:
+                result.append(item)
+            else:
+                for region, new_item in new_items:
+                    result.append(new_item)
 
         return flatten_list(result)

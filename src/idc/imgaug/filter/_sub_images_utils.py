@@ -1,13 +1,14 @@
 import logging
+import io
 import os
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import numpy as np
 from shapely import Polygon, GeometryCollection, MultiPolygon
-from wai.common.adams.imaging.locateobjects import LocatedObject
+from wai.common.adams.imaging.locateobjects import LocatedObject, LocatedObjects
 from wai.common.geometry import Point as WaiPoint, Polygon as WaiPolygon
 
-from idc.api import ImageSegmentationAnnotations
+from idc.api import ImageSegmentationAnnotations, ImageClassificationData, ImageSegmentationData, ObjectDetectionData, ImageData
 
 REGION_SORTING_NONE = "none"
 REGION_SORTING_XY = "x-then-y"
@@ -52,11 +53,11 @@ def parse_regions(regions: List[str], region_sorting: str, logger: logging.Logge
     :type region_sorting: str
     :param logger: for generating some logging info
     :type logger: logging.Logger
-    :return: the tuple of xyxy and LocatedObject lists
+    :return: the tuple of LocatedObject list and xyxy tuple list
     :rtype: tuple
     """
-    regions_xyxy = []
     region_lobjs = []
+    regions_xyxy = []
     for region in regions:
         coords = [int(x) for x in region.split(",")]
         if len(coords) == 4:
@@ -80,7 +81,8 @@ def parse_regions(regions: List[str], region_sorting: str, logger: logging.Logge
     for lobj in region_lobjs:
         regions_xyxy.append((lobj.x, lobj.y, lobj.x + lobj.width - 1, lobj.y + lobj.height - 1))
     logger.info("sorted xyxy: %s" % str(regions_xyxy))
-    return regions_xyxy, region_lobjs
+
+    return region_lobjs, regions_xyxy
 
 
 def region_filename(path: str, regions_lobj: List[LocatedObject], regions_xyxy: List[Tuple], index: int, suffix_template: str) -> str:
@@ -233,3 +235,72 @@ def fit_layers(region: LocatedObject, annotations: ImageSegmentationAnnotations,
         if add:
             layers[label] = layer
     return ImageSegmentationAnnotations(annotations.labels[:], layers)
+
+
+def process_image(item: ImageData, regions_lobj: List[LocatedObject], regions_xyxy: List[Tuple], suffix: str,
+                  suppress_empty: bool, include_partial: bool, logger: logging.Logger) -> Optional[List[Tuple[LocatedObject, ImageData]]]:
+    """
+    Processes the image according to the defined regions and returns a list of tuples consisting of the located
+    object for the region and the new image/annotations.
+
+    :param item: the image to process
+    :type item: ImageData
+    :param regions_lobj: the regions as list of located object
+    :type regions_lobj: list
+    :param regions_xyxy: the regions as list of xyxy tuples
+    :type regions_xyxy: list
+    :param suffix: the suffix template for the new images
+    :type suffix: str
+    :param suppress_empty: whether to suppress sub-images with no annotatoins (object detection and image segmentation only)
+    :type suppress_empty: bool
+    :param include_partial: whether to include partial annotations (ones that get cut off by the region)
+    :type include_partial: bool
+    :param logger: for logging purposes
+    :type logger: logging.Logger
+    :return: the list of tuples (located object of region, new image)
+    :rtype: list
+    """
+    result = []
+
+    pil = item.image
+    for region_index, region_xyxy in enumerate(regions_xyxy):
+        logger.info("Applying region %d :%s" % (region_index, str(region_xyxy)))
+
+        # crop image
+        x0, y0, x1, y1 = region_xyxy
+        if x1 > item.image_width:
+            x1 = item.image_width
+        if y1 > item.image_height:
+            y1 = item.image_height
+        sub_image = pil.crop((x0, y0, x1, y1))
+        sub_bytes = io.BytesIO()
+        sub_image.save(sub_bytes, format=item.image_format)
+        image_name_new = region_filename(item.image_name, regions_lobj, regions_xyxy, region_index, suffix)
+
+        # crop annotations and forward
+        region_lobj = regions_lobj[region_index]
+        if isinstance(item, ImageClassificationData):
+            item_new = ImageClassificationData(image_name=image_name_new, data=sub_bytes.getvalue(),
+                                               annotation=item.annotation, metadata=item.get_metadata())
+            result.append((region_lobj, item_new))
+        elif isinstance(item, ObjectDetectionData):
+            new_objects = []
+            for ann_lobj in item.annotation:
+                ratio = region_lobj.overlap_ratio(ann_lobj)
+                if ((ratio > 0) and include_partial) or (ratio >= 1):
+                    new_objects.append(fit_located_object(region_index, region_lobj, ann_lobj, logger))
+            if not suppress_empty or (len(new_objects) > 0):
+                item_new = ObjectDetectionData(image_name=image_name_new, data=sub_bytes.getvalue(),
+                                               annotation=LocatedObjects(new_objects), metadata=item.get_metadata())
+                result.append((region_lobj, item_new))
+        elif isinstance(item, ImageSegmentationData):
+            new_annotations = fit_layers(region_lobj, item.annotation, suppress_empty)
+            if not suppress_empty or (len(new_annotations.layers) > 0):
+                item_new = ImageSegmentationData(image_name=image_name_new, data=sub_bytes.getvalue(),
+                                                 annotation=new_annotations, metadata=item.get_metadata())
+                result.append((region_lobj, item_new))
+        else:
+            logger.warning("Unhandled data (%s), skipping!" % str(type(item)))
+            return None
+
+    return result
