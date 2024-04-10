@@ -1,5 +1,6 @@
 import argparse
 import io
+import numpy as np
 import os
 from typing import List
 
@@ -9,7 +10,7 @@ from wai.logging import LOGGING_WARNING
 from wai.common.geometry import Polygon as WaiPolygon
 from wai.common.geometry import Point as WaiPoint
 from wai.common.adams.imaging.locateobjects import LocatedObjects, LocatedObject
-from idc.api import ImageClassificationData, ObjectDetectionData, flatten_list, make_list
+from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, ImageSegmentationAnnotations, flatten_list, make_list
 
 
 REGION_SORTING_NONE = "none"
@@ -105,7 +106,7 @@ class SubImages(Filter):
         :return: the list of classes
         :rtype: list
         """
-        return [ImageClassificationData, ObjectDetectionData]
+        return [ImageClassificationData, ObjectDetectionData, ImageSegmentationData]
 
     def generates(self) -> List:
         """
@@ -114,7 +115,7 @@ class SubImages(Filter):
         :return: the list of classes
         :rtype: list
         """
-        return [ImageClassificationData, ObjectDetectionData]
+        return [ImageClassificationData, ObjectDetectionData, ImageSegmentationData]
 
     def _create_argparser(self) -> argparse.ArgumentParser:
         """
@@ -127,7 +128,7 @@ class SubImages(Filter):
         parser.add_argument("-r", "--regions", type=str, default=None, help="The regions (X,Y,WIDTH,HEIGHT) to crop and forward with their annotations (0-based coordinates)", required=True, nargs="+")
         parser.add_argument("-s", "--region_sorting", choices=REGION_SORTING, default=REGION_SORTING_NONE, help="How to sort the supplied region definitions", required=False)
         parser.add_argument("-p", "--include_partial", action="store_true", help="Whether to include only annotations that fit fully into a region or also partial ones", required=False)
-        parser.add_argument("-e", "--suppress_empty", action="store_true", help="Suppresses sub-images that have no annotations (object detection)", required=False)
+        parser.add_argument("-e", "--suppress_empty", action="store_true", help="Suppresses sub-images that have no annotations (object detection and image segmentation)", required=False)
         parser.add_argument("-S", "--suffix", type=str, default=DEFAULT_SUFFIX, help="The suffix pattern to use for the generated sub-images, available placeholders: " + "|".join(PLACEHOLDERS), required=False)
         return parser
 
@@ -200,7 +201,7 @@ class SubImages(Filter):
         :rtype: str
         """
         parts = os.path.splitext(path)
-        index_pattern = "-%0" + str(len(str(len(self._region_lobjs)))) + "d"
+        index_pattern = "%0" + str(len(str(len(self._region_lobjs)))) + "d"
         index_str = index_pattern % index
         suffix = self.suffix
         suffix = suffix.replace(PH_INDEX, index_str)
@@ -297,6 +298,30 @@ class SubImages(Filter):
 
         return result
 
+    def _fit_layers(self, region: LocatedObject, annotations: ImageSegmentationAnnotations) -> ImageSegmentationAnnotations:
+        """
+        Crops the layers to the region.
+
+        :param region: the region to crop the layers to
+        :type region: LocatedObject
+        :param annotations: the annotations to crop
+        :type annotations: ImageSegmentationAnnotations
+        :return: the updated annotations
+        :rtype: ImageSegmentationAnnotations
+        """
+        layers = dict()
+        for label in annotations.layers:
+            layer = annotations.layers[label][region.y:region.y+region.height-1, region.x:region.x+region.width-1]
+            add = True
+            if self.suppress_empty:
+                unique = np.unique(layer)
+                # only background? -> skip
+                if (len(unique) == 1) and (unique[0] == 0):
+                    add = False
+            if add:
+                layers[label] = layer
+        return ImageSegmentationAnnotations(annotations.labels[:], layers)
+
     def _do_process(self, data):
         """
         Processes the data record(s).
@@ -310,11 +335,18 @@ class SubImages(Filter):
             pil = item.image
             for region_index, region_xyxy in enumerate(self._regions_xyxy):
                 self.logger().info("Applying region %d :%s" % (region_index, str(region_xyxy)))
+
                 # crop image
-                sub_image = pil.crop(region_xyxy)
+                x0, y0, x1, y1 = region_xyxy
+                if x1 > item.image_width:
+                    x1 = item.image_width
+                if y1 > item.image_height:
+                    y1 = item.image_height
+                sub_image = pil.crop((x0, y0, x1, y1))
                 sub_bytes = io.BytesIO()
                 sub_image.save(sub_bytes, format=item.image_format)
                 image_name_new = self._new_filename(item.image_name, region_index)
+
                 # crop annotations and forward
                 region_lobj = self._region_lobjs[region_index]
                 if isinstance(item, ImageClassificationData):
@@ -330,6 +362,12 @@ class SubImages(Filter):
                     if not self.suppress_empty or (len(new_objects) > 0):
                         item_new = ObjectDetectionData(image_name=image_name_new, data=sub_bytes.getvalue(),
                                                        annotation=LocatedObjects(new_objects), metadata=item.get_metadata())
+                        result.append(item_new)
+                elif isinstance(item, ImageSegmentationData):
+                    new_annotations = self._fit_layers(region_lobj, item.annotation)
+                    if not self.suppress_empty or (len(new_annotations.layers) > 0):
+                        item_new = ImageSegmentationData(image_name=image_name_new, data=sub_bytes.getvalue(),
+                                                         annotation=new_annotations, metadata=item.get_metadata())
                         result.append(item_new)
                 else:
                     self.logger().warning("Unhandled data (%s), skipping!" % str(type(item)))

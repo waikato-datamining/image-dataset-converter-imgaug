@@ -1,7 +1,7 @@
 # sub-images
 
-* accepts: idc.api.ImageClassificationData, idc.api.ObjectDetectionData
-* generates: idc.api.ImageClassificationData, idc.api.ObjectDetectionData
+* accepts: idc.api.ImageClassificationData, idc.api.ObjectDetectionData, idc.api.ImageSegmentationData
+* generates: idc.api.ImageClassificationData, idc.api.ObjectDetectionData, idc.api.ImageSegmentationData
 
 Extracts sub-images (incl their annotations) from the images coming through, using the defined regions.
 
@@ -31,7 +31,7 @@ optional arguments:
                         Whether to include only annotations that fit fully
                         into a region or also partial ones (default: False)
   -e, --suppress_empty  Suppresses sub-images that have no annotations (object
-                        detection) (default: False)
+                        detection and image segmentation) (default: False)
   -S SUFFIX, --suffix SUFFIX
                         The suffix pattern to use for the generated sub-
                         images, available placeholders:
