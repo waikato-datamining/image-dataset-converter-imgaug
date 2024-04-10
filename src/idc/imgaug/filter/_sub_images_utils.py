@@ -4,6 +4,7 @@ import os
 from typing import List, Tuple, Optional
 
 import numpy as np
+from PIL import Image
 from shapely import Polygon, GeometryCollection, MultiPolygon
 from wai.common.adams.imaging.locateobjects import LocatedObject, LocatedObjects
 from wai.common.geometry import Point as WaiPoint, Polygon as WaiPolygon
@@ -302,5 +303,35 @@ def process_image(item: ImageData, regions_lobj: List[LocatedObject], regions_xy
         else:
             logger.warning("Unhandled data (%s), skipping!" % str(type(item)))
             return None
+
+    return result
+
+
+def new_from_template(item):
+    """
+    Creates an empty image container using the provided template.
+
+    :param item: the template container
+    :return: the new container
+    """
+    img = Image.new(item.image.mode, item.image.image_size)
+    img_bytes = io.BytesIO()
+    img.save(img_bytes, format=item.image_format)
+
+    if isinstance(item, ImageClassificationData):
+        result = ImageClassificationData(image_name=item.image_name, data=img_bytes.getvalue(),
+                                         metadata=item.get_metadata(), annotation=None)
+    elif isinstance(item, ObjectDetectionData):
+        result = ObjectDetectionData(image_name=item.image_name, data=img_bytes.getvalue(),
+                                     metadata=item.get_metadata(), annotation=LocatedObjects())
+    elif isinstance(item, ImageSegmentationData):
+        layers = dict()
+        for label in item.annotation.labels:
+            layers[label] = np.zeros((item.image_height, item.image_width), dtype=np.uint8)
+        annotation = ImageSegmentationAnnotations(item.annotation.labels[:], layers)
+        result = ImageSegmentationData(image_name=item.image_name, data=img_bytes.getvalue(),
+                                       metadata=item.get_metadata(), annotation=annotation)
+    else:
+        raise Exception("Unhandled type of data: %s" % str(type(item)))
 
     return result
