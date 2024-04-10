@@ -8,9 +8,9 @@ from typing import List
 from wai.logging import init_logging, set_logging_level, add_logging_level
 from idc.core import ENV_IDC_LOGLEVEL
 
-GRID_TO_REGIONS = "idc-generate-regions"
+GENERATE_REGIONS = "idc-generate-regions"
 
-_logger = logging.getLogger(GRID_TO_REGIONS)
+_logger = logging.getLogger(GENERATE_REGIONS)
 
 
 @dataclass
@@ -152,7 +152,7 @@ def main(args=None):
     init_logging(env_var=ENV_IDC_LOGLEVEL)
     parser = argparse.ArgumentParser(
         description="Tool turns an image size into regions to be used, e.g., with the 'sub-images' filter. Either specify the number of rows/cols or the height/width of rows/cols.",
-        prog=GRID_TO_REGIONS,
+        prog=GENERATE_REGIONS,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-W", "--width", type=int, help="The width of the image.", default=None, required=True)
     parser.add_argument("-H", "--height", type=int, help="The height of the image.", default=None, required=True)
