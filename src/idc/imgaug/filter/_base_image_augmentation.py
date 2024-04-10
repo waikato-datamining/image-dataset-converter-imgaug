@@ -85,37 +85,38 @@ class BaseImageAugmentation(BaseFilter, abc.ABC):
         normalized = False
         annotation = item.annotation
 
-        # object detection
-        if isinstance(item, ObjectDetectionData):
-            normalized = item.is_normalized()
-            annotation = item.get_absolute()
-            has_polys = False
-            for obj in annotation:
-                if obj.has_polygon():
-                    has_polys = True
-                    break
-            if has_polys:
-                polys = []
+        if annotation is not None:
+            # object detection
+            if isinstance(item, ObjectDetectionData):
+                normalized = item.is_normalized()
+                annotation = item.get_absolute()
+                has_polys = False
                 for obj in annotation:
-                    x = obj.get_polygon_x()
-                    y = obj.get_polygon_y()
-                    points = []
-                    for i in range(len(x)):
-                        points.append((x[i], y[i]))
-                    poly = Polygon(points)
-                    polys.append(poly)
-                    polysoi = PolygonsOnImage(polys, shape=image.shape)
-            else:
-                bboxes = []
-                for obj in annotation:
-                    bbox = BoundingBox(x1=obj.x, y1=obj.y, x2=obj.x + obj.width - 1, y2=obj.y + obj.height - 1)
-                    bboxes.append(bbox)
-                bboxesoi = BoundingBoxesOnImage(bboxes, shape=image.shape)
+                    if obj.has_polygon():
+                        has_polys = True
+                        break
+                if has_polys:
+                    polys = []
+                    for obj in annotation:
+                        x = obj.get_polygon_x()
+                        y = obj.get_polygon_y()
+                        points = []
+                        for i in range(len(x)):
+                            points.append((x[i], y[i]))
+                        poly = Polygon(points)
+                        polys.append(poly)
+                        polysoi = PolygonsOnImage(polys, shape=image.shape)
+                else:
+                    bboxes = []
+                    for obj in annotation:
+                        bbox = BoundingBox(x1=obj.x, y1=obj.y, x2=obj.x + obj.width - 1, y2=obj.y + obj.height - 1)
+                        bboxes.append(bbox)
+                    bboxesoi = BoundingBoxesOnImage(bboxes, shape=image.shape)
 
-        # image segmentation
-        elif isinstance(item, ImageSegmentationData):
-            combined = combine_layers(item)
-            imgsegmap = SegmentationMapsOnImage(combined, shape=(item.image_height, item.image_width))
+            # image segmentation
+            elif isinstance(item, ImageSegmentationData):
+                combined = combine_layers(item)
+                imgsegmap = SegmentationMapsOnImage(combined, shape=(item.image_height, item.image_width))
 
         # augment
         bbs_aug = None

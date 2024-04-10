@@ -1,17 +1,13 @@
 import argparse
-import io
-import numpy as np
-
 from typing import List
 
-from PIL import Image, ImageDraw
 from seppl import split_args, split_cmdline, Initializable, init_initializable
 from seppl.io import Filter
 from wai.logging import LOGGING_WARNING
-from wai.common.adams.imaging.locateobjects import LocatedObjects
-from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, flatten_list, make_list, ImageSegmentationAnnotations
+
+from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, flatten_list, make_list
 from idc.imgaug.filter._sub_images_utils import REGION_SORTING_NONE, REGION_SORTING, PLACEHOLDERS, DEFAULT_SUFFIX, \
-    parse_regions, region_filename, fit_located_object, fit_layers, process_image, new_from_template, transfer_region, prune_annotations
+    parse_regions, process_image, new_from_template, transfer_region, prune_annotations
 
 
 class MetaSubImages(Filter):
@@ -101,7 +97,7 @@ class MetaSubImages(Filter):
         parser.add_argument("-r", "--regions", type=str, default=None, help="The regions (X,Y,WIDTH,HEIGHT) to crop and forward with their annotations (0-based coordinates)", required=True, nargs="+")
         parser.add_argument("-s", "--region_sorting", choices=REGION_SORTING, default=REGION_SORTING_NONE, help="How to sort the supplied region definitions", required=False)
         parser.add_argument("-p", "--include_partial", action="store_true", help="Whether to include only annotations that fit fully into a region or also partial ones", required=False)
-        parser.add_argument("-e", "--suppress_empty", action="store_true", help="Suppresses sub-images that have no annotations (object detection and image segmentation)", required=False)
+        parser.add_argument("-e", "--suppress_empty", action="store_true", help="Suppresses sub-images that have no annotations", required=False)
         parser.add_argument("-S", "--suffix", type=str, default=DEFAULT_SUFFIX, help="The suffix pattern to use for the generated sub-images, available placeholders: " + "|".join(PLACEHOLDERS), required=False)
         parser.add_argument("-b", "--base_filter", type=str, default="passthrough", help="The base filter to pass the sub-images through", required=False)
         return parser
@@ -125,7 +121,7 @@ class MetaSubImages(Filter):
         """
         Initializes the processing, e.g., for opening files or databases.
         """
-        from idc.registry import available_filters, available_writers
+        from idc.registry import available_filters
         from seppl import args_to_objects
 
         super().initialize()

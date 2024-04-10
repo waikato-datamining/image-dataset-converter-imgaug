@@ -253,7 +253,7 @@ def process_image(item: ImageData, regions_lobj: List[LocatedObject], regions_xy
     :type regions_xyxy: list
     :param suffix: the suffix template for the new images
     :type suffix: str
-    :param suppress_empty: whether to suppress sub-images with no annotatoins (object detection and image segmentation only)
+    :param suppress_empty: whether to suppress sub-images with no annotations
     :type suppress_empty: bool
     :param include_partial: whether to include partial annotations (ones that get cut off by the region)
     :type include_partial: bool
@@ -282,22 +282,29 @@ def process_image(item: ImageData, regions_lobj: List[LocatedObject], regions_xy
         # crop annotations and forward
         region_lobj = regions_lobj[region_index]
         if isinstance(item, ImageClassificationData):
-            item_new = ImageClassificationData(image_name=image_name_new, data=sub_bytes.getvalue(),
-                                               annotation=item.annotation, metadata=item.get_metadata())
-            result.append((region_lobj, item_new))
+            annotation = item.annotation
+            if not suppress_empty or (annotation is not None):
+                item_new = ImageClassificationData(image_name=image_name_new, data=sub_bytes.getvalue(),
+                                                   annotation=annotation, metadata=item.get_metadata())
+                result.append((region_lobj, item_new))
         elif isinstance(item, ObjectDetectionData):
             new_objects = []
-            for ann_lobj in item.annotation:
-                ratio = region_lobj.overlap_ratio(ann_lobj)
-                if ((ratio > 0) and include_partial) or (ratio >= 1):
-                    new_objects.append(fit_located_object(region_index, region_lobj, ann_lobj, logger))
+            if item.has_annotation():
+                for ann_lobj in item.annotation:
+                    ratio = region_lobj.overlap_ratio(ann_lobj)
+                    if ((ratio > 0) and include_partial) or (ratio >= 1):
+                        new_objects.append(fit_located_object(region_index, region_lobj, ann_lobj, logger))
             if not suppress_empty or (len(new_objects) > 0):
                 item_new = ObjectDetectionData(image_name=image_name_new, data=sub_bytes.getvalue(),
                                                annotation=LocatedObjects(new_objects), metadata=item.get_metadata())
                 result.append((region_lobj, item_new))
         elif isinstance(item, ImageSegmentationData):
-            new_annotations = fit_layers(region_lobj, item.annotation, suppress_empty)
+            new_annotations = ImageSegmentationAnnotations(list(), dict())
+            if item.has_annotation():
+                new_annotations = fit_layers(region_lobj, item.annotation, suppress_empty)
             if not suppress_empty or (len(new_annotations.layers) > 0):
+                if len(new_annotations.layers) == 0:
+                    new_annotations = None
                 item_new = ImageSegmentationData(image_name=image_name_new, data=sub_bytes.getvalue(),
                                                  annotation=new_annotations, metadata=item.get_metadata())
                 result.append((region_lobj, item_new))
@@ -326,10 +333,13 @@ def new_from_template(item):
         result = ObjectDetectionData(image_name=item.image_name, data=img_bytes.getvalue(),
                                      metadata=item.get_metadata(), annotation=LocatedObjects())
     elif isinstance(item, ImageSegmentationData):
+        labels = list()
         layers = dict()
-        for label in item.annotation.labels:
-            layers[label] = np.zeros((item.image_height, item.image_width), dtype=np.uint8)
-        annotation = ImageSegmentationAnnotations(item.annotation.labels[:], layers)
+        if item.has_annotation():
+            labels = item.annotation.labels[:]
+            for label in item.annotation.labels:
+                layers[label] = np.zeros((item.image_height, item.image_width), dtype=np.uint8)
+        annotation = ImageSegmentationAnnotations(labels, layers)
         result = ImageSegmentationData(image_name=item.image_name, data=img_bytes.getvalue(),
                                        metadata=item.get_metadata(), annotation=annotation)
     else:
@@ -352,39 +362,40 @@ def transfer_region(full_image, sub_image, region: LocatedObject):
     full_image.image.paste(sub_image.image, (region.x, region.y))
 
     # transfer annotations
-    # image classification (comma-separated list of labels)
-    if isinstance(full_image, ImageClassificationData):
-        if full_image.annotation is None:
-            full_image.annotation = sub_image.annotation
+    if sub_image.annotation is not None:
+        # image classification (comma-separated list of labels)
+        if isinstance(full_image, ImageClassificationData):
+            if full_image.annotation is None:
+                full_image.annotation = sub_image.annotation
+            else:
+                labels = full_image.annotation.split(",")
+                if sub_image.annotation not in labels:
+                    labels.append(sub_image.annotation)
+                    full_image.annotation = ",".join(labels)
+
+        # object detection (relocate located objects)
+        elif isinstance(full_image, ObjectDetectionData):
+            for lobj in sub_image.annotation:
+                new_lobj = LocatedObject(sub_image.x + region.x, sub_image.y + region.y,
+                                         sub_image.width, sub_image.height, **sub_image.metadata)
+                if lobj.has_polygon:
+                    xs = [x+region.x for x in lobj.get_polygon_x()]
+                    ys = [y+region.y for y in lobj.get_polygon_y()]
+                    new_lobj.set_polygon(Polygon(*(WaiPoint(x, y) for x, y in zip(xs, ys))))
+                full_image.annotation.append(new_lobj)
+
+        # image segmentation
+        elif isinstance(full_image, ImageSegmentationData):
+            for label in sub_image.annotation.layers:
+                x = region.x
+                y = region.y
+                w = region.width
+                h = region.height
+                full_image.annotation.layers[label][y:y+h, x:x+w] = sub_image.annotation.layers[label]
+
+        # unknown
         else:
-            labels = full_image.annotation.split(",")
-            if sub_image.annotation not in labels:
-                labels.append(sub_image.annotation)
-                full_image.annotation = ",".join(labels)
-
-    # object detection (relocate located objects)
-    elif isinstance(full_image, ObjectDetectionData):
-        for lobj in sub_image.annotation:
-            new_lobj = LocatedObject(sub_image.x + region.x, sub_image.y + region.y,
-                                     sub_image.width, sub_image.height, **sub_image.metadata)
-            if lobj.has_polygon:
-                xs = [x+region.x for x in lobj.get_polygon_x()]
-                ys = [y+region.y for y in lobj.get_polygon_y()]
-                new_lobj.set_polygon(Polygon(*(WaiPoint(x, y) for x, y in zip(xs, ys))))
-            full_image.annotation.append(new_lobj)
-
-    # image segmentation
-    elif isinstance(full_image, ImageSegmentationData):
-        for label in sub_image.annotation.layers:
-            x = region.x
-            y = region.y
-            w = region.width
-            h = region.height
-            full_image.annotation.layers[label][y:y+h, x:x+w] = sub_image.annotation.layers[label]
-
-    # unknown
-    else:
-        raise Exception("Unhandled type of data: %s" % str(type(full_image)))
+            raise Exception("Unhandled type of data: %s" % str(type(full_image)))
 
 
 def prune_annotations(image):

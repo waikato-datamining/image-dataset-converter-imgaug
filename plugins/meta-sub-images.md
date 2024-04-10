@@ -32,8 +32,8 @@ optional arguments:
   -p, --include_partial
                         Whether to include only annotations that fit fully
                         into a region or also partial ones (default: False)
-  -e, --suppress_empty  Suppresses sub-images that have no annotations (object
-                        detection and image segmentation) (default: False)
+  -e, --suppress_empty  Suppresses sub-images that have no annotations
+                        (default: False)
   -S SUFFIX, --suffix SUFFIX
                         The suffix pattern to use for the generated sub-
                         images, available placeholders:
