@@ -145,7 +145,7 @@ class SubImages(Filter):
             if sub_items is None:
                 result.append(item)
             else:
-                for region, sub_item in sub_items:
+                for _, sub_item in sub_items:
                     result.append(sub_item)
 
         return flatten_list(result)
