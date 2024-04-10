@@ -181,5 +181,6 @@ class SubImages(Filter):
                 else:
                     self.logger().warning("Unhandled data (%s), skipping!" % str(type(item)))
                     result.append(item)
+                    break
 
         return flatten_list(result)
