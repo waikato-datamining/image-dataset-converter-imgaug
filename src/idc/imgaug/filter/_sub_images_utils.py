@@ -1,5 +1,5 @@
-import logging
 import io
+import logging
 import os
 from typing import List, Tuple, Optional
 
@@ -9,7 +9,8 @@ from shapely import Polygon, GeometryCollection, MultiPolygon
 from wai.common.adams.imaging.locateobjects import LocatedObject, LocatedObjects
 from wai.common.geometry import Point as WaiPoint, Polygon as WaiPolygon
 
-from idc.api import ImageSegmentationAnnotations, ImageClassificationData, ImageSegmentationData, ObjectDetectionData, ImageData
+from idc.api import ImageSegmentationAnnotations, ImageClassificationData, ImageSegmentationData, ObjectDetectionData, \
+    ImageData
 
 REGION_SORTING_NONE = "none"
 REGION_SORTING_XY = "x-then-y"
@@ -226,7 +227,7 @@ def fit_layers(region: LocatedObject, annotations: ImageSegmentationAnnotations,
     """
     layers = dict()
     for label in annotations.layers:
-        layer = annotations.layers[label][region.y:region.y+region.height-1, region.x:region.x+region.width-1]
+        layer = annotations.layers[label][region.y:region.y+region.height, region.x:region.x+region.width]
         add = True
         if suppress_empty:
             unique = np.unique(layer)
@@ -269,11 +270,11 @@ def process_image(item: ImageData, regions_lobj: List[LocatedObject], regions_xy
 
         # crop image
         x0, y0, x1, y1 = region_xyxy
-        if x1 > item.image_width:
-            x1 = item.image_width
-        if y1 > item.image_height:
-            y1 = item.image_height
-        sub_image = pil.crop((x0, y0, x1, y1))
+        if x1 >= item.image_width:
+            x1 = item.image_width - 1
+        if y1 >= item.image_height:
+            y1 = item.image_height - 1
+        sub_image = pil.crop((x0, y0, x1+1, y1+1))
         sub_bytes = io.BytesIO()
         sub_image.save(sub_bytes, format=item.image_format)
         image_name_new = region_filename(item.image_name, regions_lobj, regions_xyxy, region_index, suffix)
@@ -314,7 +315,7 @@ def new_from_template(item):
     :param item: the template container
     :return: the new container
     """
-    img = Image.new(item.image.mode, item.image.image_size)
+    img = Image.new(item.image.mode, item.image_size)
     img_bytes = io.BytesIO()
     img.save(img_bytes, format=item.image_format)
 
@@ -335,3 +336,87 @@ def new_from_template(item):
         raise Exception("Unhandled type of data: %s" % str(type(item)))
 
     return result
+
+
+def transfer_region(full_image, sub_image, region: LocatedObject):
+    """
+    Transfers the sub image into the full image according to the region.
+    Annotations get transferred as well.
+
+    :param full_image: the image to transfer the sub image into
+    :param sub_image: the sub image to transfer
+    :param region: the region in the full image to update
+    :type region: LocatedObject
+    """
+    # transfer image
+    full_image.image.paste(sub_image.image, (region.x, region.y))
+
+    # transfer annotations
+    # image classification (comma-separated list of labels)
+    if isinstance(full_image, ImageClassificationData):
+        if full_image.annotation is None:
+            full_image.annotation = sub_image.annotation
+        else:
+            labels = full_image.annotation.split(",")
+            if sub_image.annotation not in labels:
+                labels.append(sub_image.annotation)
+                full_image.annotation = ",".join(labels)
+
+    # object detection (relocate located objects)
+    elif isinstance(full_image, ObjectDetectionData):
+        for lobj in sub_image.annotation:
+            new_lobj = LocatedObject(sub_image.x + region.x, sub_image.y + region.y,
+                                     sub_image.width, sub_image.height, **sub_image.metadata)
+            if lobj.has_polygon:
+                xs = [x+region.x for x in lobj.get_polygon_x()]
+                ys = [y+region.y for y in lobj.get_polygon_y()]
+                new_lobj.set_polygon(Polygon(*(WaiPoint(x, y) for x, y in zip(xs, ys))))
+            full_image.annotation.append(new_lobj)
+
+    # image segmentation
+    elif isinstance(full_image, ImageSegmentationData):
+        for label in sub_image.annotation.layers:
+            x = region.x
+            y = region.y
+            w = region.width
+            h = region.height
+            full_image.annotation.layers[label][y:y+h, x:x+w] = sub_image.annotation.layers[label]
+
+    # unknown
+    else:
+        raise Exception("Unhandled type of data: %s" % str(type(full_image)))
+
+
+def prune_annotations(image):
+    """
+    Prunes the annotations.
+
+    :param image: the image container to process
+    """
+    if isinstance(image, ImageClassificationData):
+        # nothing to do
+        pass
+
+    elif isinstance(image, ObjectDetectionData):
+        # no object? -> remove annotations
+        if len(image.annotation) == 0:
+            image.annotation = None
+
+    elif isinstance(image, ImageSegmentationData):
+        # check which layers are empty
+        empty = []
+        for label in image.annotation.layers:
+            unique = np.unique(image.annotation.layers[label])
+            if (len(unique) == 1) and (unique[0] == 0):
+                empty.append(label)
+
+        # remove empty layers
+        for label in empty:
+            del image.annotation.layers[label]
+
+        # no layers left? -> remove annotations
+        if len(image.annotation.layers) == 0:
+            image.annotation = None
+
+    else:
+        raise Exception("Unhandled type of data: %s" % str(type(image)))
