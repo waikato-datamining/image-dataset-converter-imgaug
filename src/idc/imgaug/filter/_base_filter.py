@@ -90,8 +90,6 @@ class BaseFilter(Filter, abc.ABC):
         super().initialize()
         if self.mode is None:
             self.mode = IMGAUG_MODE_REPLACE
-        if self.suffix is None:
-            self.suffix = ""
         if self.seed_augmentation is None:
             self.seed_augmentation = False
         if self.threshold is None:
