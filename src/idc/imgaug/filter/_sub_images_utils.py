@@ -376,7 +376,7 @@ def transfer_region(full_image, sub_image, region: LocatedObject):
         # object detection (relocate located objects)
         elif isinstance(full_image, ObjectDetectionData):
             for lobj in sub_image.annotation:
-                new_lobj = LocatedObject(sub_image.x + region.x, sub_image.y + region.y,
+                new_lobj = LocatedObject(lobj.x + region.x, lobj.y + region.y,
                                          sub_image.width, sub_image.height, **sub_image.metadata)
                 if lobj.has_polygon:
                     xs = [x+region.x for x in lobj.get_polygon_x()]
