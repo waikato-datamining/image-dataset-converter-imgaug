@@ -380,7 +380,7 @@ def transfer_region(full_image, sub_image, region: LocatedObject):
                 if lobj.has_polygon:
                     xs = [x+region.x for x in lobj.get_polygon_x()]
                     ys = [y+region.y for y in lobj.get_polygon_y()]
-                    new_lobj.set_polygon(Polygon(*(WaiPoint(x, y) for x, y in zip(xs, ys))))
+                    new_lobj.set_polygon(WaiPolygon(*(WaiPoint(x, y) for x, y in zip(xs, ys))))
                 full_image.annotation.append(new_lobj)
 
         # image segmentation
