@@ -1,3 +1,4 @@
+from ._augment_util import augment_image
 from ._base_filter import BaseFilter
 from ._base_image_augmentation import BaseImageAugmentation
 from ._crop import Crop
