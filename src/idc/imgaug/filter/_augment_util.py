@@ -13,18 +13,21 @@ from wai.common.geometry import Polygon as WaiPolygon
 from idc.api import ImageData, ObjectDetectionData, ImageSegmentationData, combine_layers, split_layers
 
 
-def augment_image(item: ImageData, image_name: str, pipeline) -> ImageData:
+def augment_image(item: ImageData, pipeline, image_name: str = None) -> ImageData:
     """
     Augments the image by applying the pipeline. The annotations get processed accordingly.
 
     :param item: the image to augment
     :type item: ImageData
-    :param image_name: the new image name
+    :param image_name: the new image name, uses the current one when None
     :type image_name: str
     :param pipeline: the augmentation pipeline
     :return: the potentially updated image
     :rtype: ImageData
     """
+    if image_name is None:
+        image_name = item.image_name
+
     image = imageio.imread(item.image_bytes)
 
     # convert annotations

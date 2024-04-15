@@ -66,4 +66,4 @@ class BaseImageAugmentation(BaseFilter, abc.ABC):
         :rtype: ImageData
         """
         seq = self._create_pipeline(aug_seed)
-        return augment_image(item, image_name, seq)
+        return augment_image(item, seq, image_name=image_name)
