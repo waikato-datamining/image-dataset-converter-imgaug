@@ -315,22 +315,28 @@ def process_image(item: ImageData, regions_lobj: List[LocatedObject], regions_xy
     return result
 
 
-def new_from_template(item):
+def new_from_template(item, rebuild_image: bool = False):
     """
     Creates an empty image container using the provided template.
 
     :param item: the template container
+    :param rebuild_image: whether to rebuild the image from the sub-images (ie start with empty) or use input one
+    :type rebuild_image: bool
     :return: the new container
     """
-    img = Image.new(item.image.mode, item.image_size)
-    img_bytes = io.BytesIO()
-    img.save(img_bytes, format=item.image_format)
+    if rebuild_image:
+        img = Image.new(item.image.mode, item.image_size)
+        img_bytes = io.BytesIO()
+        img.save(img_bytes, format=item.image_format)
+        data = img_bytes.getvalue()
+    else:
+        data = item.image_bytes
 
     if isinstance(item, ImageClassificationData):
-        result = ImageClassificationData(image_name=item.image_name, data=img_bytes.getvalue(),
+        result = ImageClassificationData(image_name=item.image_name, data=data,
                                          metadata=item.get_metadata(), annotation=None)
     elif isinstance(item, ObjectDetectionData):
-        result = ObjectDetectionData(image_name=item.image_name, data=img_bytes.getvalue(),
+        result = ObjectDetectionData(image_name=item.image_name, data=data,
                                      metadata=item.get_metadata(), annotation=LocatedObjects())
     elif isinstance(item, ImageSegmentationData):
         labels = list()
@@ -340,7 +346,7 @@ def new_from_template(item):
             for label in item.annotation.labels:
                 layers[label] = np.zeros((item.image_height, item.image_width), dtype=np.uint8)
         annotation = ImageSegmentationAnnotations(labels, layers)
-        result = ImageSegmentationData(image_name=item.image_name, data=img_bytes.getvalue(),
+        result = ImageSegmentationData(image_name=item.image_name, data=data,
                                        metadata=item.get_metadata(), annotation=annotation)
     else:
         raise Exception("Unhandled type of data: %s" % str(type(item)))
@@ -348,7 +354,7 @@ def new_from_template(item):
     return result
 
 
-def transfer_region(full_image, sub_image, region: LocatedObject):
+def transfer_region(full_image, sub_image, region: LocatedObject, rebuild_image: bool = False):
     """
     Transfers the sub image into the full image according to the region.
     Annotations get transferred as well.
@@ -357,9 +363,12 @@ def transfer_region(full_image, sub_image, region: LocatedObject):
     :param sub_image: the sub image to transfer
     :param region: the region in the full image to update
     :type region: LocatedObject
+    :param rebuild_image: whether to rebuild the image from the sub-images (ie start with empty) or use input one
+    :type rebuild_image: bool
     """
     # transfer image
-    full_image.image.paste(sub_image.image, (region.x, region.y))
+    if rebuild_image:
+        full_image.image.paste(sub_image.image, (region.x, region.y))
 
     # transfer annotations
     if sub_image.annotation is not None:

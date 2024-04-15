@@ -18,7 +18,8 @@ class MetaSubImages(Filter):
 
     def __init__(self, regions: List[str] = None, region_sorting: str = REGION_SORTING_NONE,
                  include_partial: bool = False, suppress_empty: bool = False, suffix: str = DEFAULT_SUFFIX,
-                 base_filter: str = None, logger_name: str = None, logging_level: str = LOGGING_WARNING):
+                 base_filter: str = None, rebuild_image: bool = False,
+                 logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initializes the filter.
 
@@ -34,6 +35,8 @@ class MetaSubImages(Filter):
         :type suffix: str
         :param base_filter: the base filter command-line to pass the sub-images through
         :type base_filter: str
+        :param rebuild_image: whether to rebuild the image from the filtered sub-images rather than using the input image
+        :type rebuild_image: bool
         :param logger_name: the name to use for the logger
         :type logger_name: str
         :param logging_level: the logging level to use
@@ -46,6 +49,7 @@ class MetaSubImages(Filter):
         self.suppress_empty = suppress_empty
         self.suffix = suffix
         self.base_filter = base_filter
+        self.rebuild_image = rebuild_image
         self._regions_xyxy = None
         self._regions_lobj = None
         self._base_filter = None
@@ -100,6 +104,7 @@ class MetaSubImages(Filter):
         parser.add_argument("-e", "--suppress_empty", action="store_true", help="Suppresses sub-images that have no annotations", required=False)
         parser.add_argument("-S", "--suffix", type=str, default=DEFAULT_SUFFIX, help="The suffix pattern to use for the generated sub-images, available placeholders: " + "|".join(PLACEHOLDERS), required=False)
         parser.add_argument("-b", "--base_filter", type=str, default="passthrough", help="The base filter to pass the sub-images through", required=False)
+        parser.add_argument("-R", "--rebuild_image", action="store_true", help="Rebuilds the image from the filtered sub-images rather than using the input image.", required=False)
         return parser
 
     def _apply_args(self, ns: argparse.Namespace):
@@ -116,6 +121,7 @@ class MetaSubImages(Filter):
         self.suppress_empty = ns.suppress_empty
         self.suffix = ns.suffix
         self.base_filter = ns.base_filter
+        self.rebuild_image = ns.rebuild_image
 
     def initialize(self):
         """
@@ -136,6 +142,8 @@ class MetaSubImages(Filter):
             self.suppress_empty = False
         if self.suffix is None:
             self.suffix = DEFAULT_SUFFIX
+        if self.rebuild_image is None:
+            self.rebuild_image = False
 
         # configure base filter
         if self.base_filter is None:
@@ -173,10 +181,10 @@ class MetaSubImages(Filter):
             if sub_items is None:
                 result.append(item)
             else:
-                new_item = new_from_template(item)
+                new_item = new_from_template(item, rebuild_image=self.rebuild_image)
                 for sub_region, sub_item in sub_items:
                     new_sub_item = self._base_filter.process(sub_item)
-                    transfer_region(new_item, new_sub_item, sub_region)
+                    transfer_region(new_item, new_sub_item, sub_region, rebuild_image=self.rebuild_image)
                 prune_annotations(new_item)
                 result.append(new_item)
 
