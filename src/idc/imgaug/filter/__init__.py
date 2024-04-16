@@ -11,3 +11,5 @@ from ._resize import Resize
 from ._rotate import Rotate
 from ._scale import Scale
 from ._sub_images import SubImages
+from ._sub_images_utils import parse_regions, new_from_template, process_image, transfer_region, fit_layers, \
+    fit_located_object, prune_annotations, region_filename, bbox_to_shapely, polygon_to_shapely, PLACEHOLDERS
