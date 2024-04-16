@@ -1,11 +1,12 @@
 import argparse
 from typing import List
 
-from seppl import split_args, split_cmdline, Initializable, init_initializable
+from seppl import Initializable, init_initializable
 from seppl.io import Filter
 from wai.logging import LOGGING_WARNING
 
-from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, flatten_list, make_list
+from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, flatten_list, make_list, \
+    parse_filter
 from idc.imgaug.filter._sub_images_utils import REGION_SORTING_NONE, REGION_SORTING, PLACEHOLDERS, DEFAULT_SUFFIX, \
     parse_regions, process_image, new_from_template, transfer_region, prune_annotations
 
@@ -127,8 +128,6 @@ class MetaSubImages(Filter):
         """
         Initializes the processing, e.g., for opening files or databases.
         """
-        from idc.registry import available_filters
-        from seppl import args_to_objects
 
         super().initialize()
 
@@ -146,19 +145,7 @@ class MetaSubImages(Filter):
             self.rebuild_image = False
 
         # configure base filter
-        if self.base_filter is None:
-            raise Exception("No base filter supplied!")
-        valid = dict()
-        valid.update(available_filters())
-        args = split_args(split_cmdline(self.base_filter), list(valid.keys()))
-        objs = args_to_objects(args, valid, allow_global_options=False)
-        if len(objs) == 1:
-            if isinstance(objs[0], Filter):
-                self._base_filter = objs[0]
-            else:
-                raise Exception("Expected instance of Filter but got: %s" % str(type(objs[0])))
-        else:
-            raise Exception("Expected to obtain one filter from '%s' but got %d instead!" % (self.base_filter, len(objs)))
+        self._base_filter = parse_filter(self.base_filter)
         self._base_filter.session = self.session
         if isinstance(self._base_filter, Initializable):
             init_initializable(self._base_filter, "filter", raise_again=True)
