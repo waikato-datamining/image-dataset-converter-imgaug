@@ -3,7 +3,7 @@
 * accepts: idc.api.ImageClassificationData, idc.api.ObjectDetectionData, idc.api.ImageSegmentationData
 * generates: idc.api.ImageClassificationData, idc.api.ObjectDetectionData, idc.api.ImageSegmentationData
 
-Extracts sub-images (incl their annotations) from the images coming through, using the defined regions.
+Extracts sub-images (incl their annotations) from the images coming through, using the defined regions. When using x/y in the suffix, these images can be reassembled using the 'idc-combine-sub-images' tool.
 
 ```
 usage: sub-images [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
@@ -11,7 +11,8 @@ usage: sub-images [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
                   [-s {none,x-then-y,y-then-x}] [-p] [-e] [-S SUFFIX]
 
 Extracts sub-images (incl their annotations) from the images coming through,
-using the defined regions.
+using the defined regions. When using x/y in the suffix, these images can be
+reassembled using the 'idc-combine-sub-images' tool.
 
 optional arguments:
   -h, --help            show this help message and exit

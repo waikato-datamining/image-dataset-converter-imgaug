@@ -60,7 +60,8 @@ class SubImages(Filter):
         :return: the description
         :rtype: str
         """
-        return "Extracts sub-images (incl their annotations) from the images coming through, using the defined regions."
+        return "Extracts sub-images (incl their annotations) from the images coming through, using the defined regions. "\
+               "When using x/y in the suffix, these images can be reassembled using the 'idc-combine-sub-images' tool."
 
     def accepts(self) -> List:
         """
