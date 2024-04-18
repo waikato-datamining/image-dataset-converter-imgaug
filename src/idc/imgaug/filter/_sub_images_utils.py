@@ -2,6 +2,7 @@ import io
 import logging
 import math
 import os
+import statistics
 from typing import List, Tuple, Optional
 
 import numpy as np
@@ -506,7 +507,8 @@ def overlapping_lines(line1: Tuple[int, int], line2: Tuple[int, int]) -> bool:
 
 def merge_polygons(combined: ObjectDetectionData, max_slope_diff: float = 1e-6, max_dist: float = 1.0) -> ObjectDetectionData:
     """
-    Merges adjacent polygons.
+    Merges adjacent polygons. Discards metadata apart from score, which it averages across merged objects,
+    and the label, which has to be the same across objects.
 
     :param combined: the input data
     :type combined: ObjectDetectionData
@@ -614,14 +616,21 @@ def merge_polygons(combined: ObjectDetectionData, max_slope_diff: float = 1e-6, 
         for merge_set in merge_sets:
             label = None
             merged = None
+            scores = []
             for i in merge_set:
                 if label is None:
                     label = get_object_label(absolute[i])
+                if "score" in absolute[i].metadata:
+                    scores.append(float(absolute[i].metadata["score"]))
                 if merged is None:
                     merged = polygon_to_shapely(absolute[i])
                 else:
                     merged = shapely.union(merged, polygon_to_shapely(absolute[i]))
             obj = shapely_to_locatedobject(merged, label=label)
+            # set average score
+            if len(scores) > 0:
+                score = statistics.mean(scores)
+                obj.metadata["score"] = score
             annotation_new.append(obj)
 
         # update container
