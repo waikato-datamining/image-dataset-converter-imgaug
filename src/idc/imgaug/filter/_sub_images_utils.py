@@ -532,8 +532,12 @@ def merge_polygons(combined: ObjectDetectionData, max_slope_diff: float = 1e-6, 
     for i in range(len(absolute)):
         vertices[i] = []
         slopes[i] = []
-        xs = absolute[i].get_polygon_x()
-        ys = absolute[i].get_polygon_y()
+        if absolute[i].has_polygon():
+            xs = absolute[i].get_polygon_x()
+            ys = absolute[i].get_polygon_y()
+        else:
+            xs = [absolute[i].x, absolute[i].x + absolute[i].width - 1, absolute[i].x + absolute[i].width - 1, absolute[i].x]
+            ys = [absolute[i].y, absolute[i].y, absolute[i].y + absolute[i].height - 1, absolute[i].y + absolute[i].height - 1]
         for n in range(len(xs)):
             # vertex: (x0,y0,x1,y1)
             vertices[i].append(LineString([(xs[n - 1], ys[n - 1]), (xs[n], ys[n])]))
