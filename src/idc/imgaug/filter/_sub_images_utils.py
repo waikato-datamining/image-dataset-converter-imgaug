@@ -1,16 +1,19 @@
 import io
 import logging
+import math
 import os
 from typing import List, Tuple, Optional
 
 import numpy as np
+import shapely
 from PIL import Image
-from shapely import Polygon, GeometryCollection, MultiPolygon
+from shapely import Polygon, GeometryCollection, MultiPolygon, LineString, distance
+from shapely.geometry.base import BaseGeometry
 from wai.common.adams.imaging.locateobjects import LocatedObject, LocatedObjects
 from wai.common.geometry import Point as WaiPoint, Polygon as WaiPolygon
 
 from idc.api import ImageSegmentationAnnotations, ImageClassificationData, ImageSegmentationData, ObjectDetectionData, \
-    ImageData
+    ImageData, get_object_label, LABEL_KEY
 
 REGION_SORTING_NONE = "none"
 REGION_SORTING_XY = "x-then-y"
@@ -153,6 +156,37 @@ def polygon_to_shapely(lobj: LocatedObject) -> Polygon:
         coords.append((x, y))
     coords.append((x_list[0], y_list[0]))
     return Polygon(coords)
+
+
+def shapely_to_locatedobject(geometry: BaseGeometry, label: str = None) -> LocatedObject:
+    """
+    Turns the shapely geometry back into a located object.
+    Assumes absolute coordinates.
+
+    :param geometry: the geometry to convert
+    :type geometry: BaseGeometry
+    :param label: the label to set (when not None)
+    :type label: str
+    :return: the generated object
+    :rtype: LocatedObject
+    """
+    # use convex hull in case of MultiPolygon
+    if isinstance(geometry, MultiPolygon):
+        geometry = geometry.convex_hull
+
+    minx, miny, maxx, maxy = geometry.bounds
+    result = LocatedObject(minx, miny, maxx-minx+1, maxy-miny+1)
+    if label is not None:
+        result.metadata[LABEL_KEY] = label
+
+    if isinstance(geometry, Polygon):
+        x_list, y_list = geometry.exterior.coords.xy
+        points = []
+        for i in range(len(x_list)):
+            points.append(WaiPoint(x=x_list[i], y=y_list[i]))
+        result.set_polygon(WaiPolygon(*points))
+
+    return result
 
 
 def fit_located_object(index: int, region: LocatedObject, annotation: LocatedObject, logger: logging.Logger) -> LocatedObject:
@@ -439,3 +473,156 @@ def prune_annotations(image):
 
     else:
         raise Exception("Unhandled type of data: %s" % str(type(image)))
+
+
+def overlapping_lines(line1: Tuple[int, int], line2: Tuple[int, int]) -> bool:
+    """
+    Checks whether the lines are overlapping.
+
+    :param line1: the first line (start,end)
+    :type line1: tuple
+    :param line2: the second line (start,eng)
+    :type line2: tuple
+    :return: True if overlap
+    :rtype: bool
+    """
+    l1_s, l1_e = line1
+    l2_s, l2_e = line2
+    # line1 is completely to the left of line2
+    if (l1_s < l2_s) and (l1_e < l2_s):
+        return False
+    # line1 is completely to the right of line2
+    if (l1_s > l2_e) and (l1_e > l2_e):
+        return False
+    # line2 is completely to the left of line1
+    if (l2_s < l1_s) and (l2_e < l1_s):
+        return False
+    # line2 is completely to the right of line1
+    if (l2_s > l1_e) and (l2_e > l1_e):
+        return False
+    # some overlap
+    return True
+
+
+def merge_polygons(combined: ObjectDetectionData, max_slope_diff: float = 1e-6, max_dist: float = 1.0) -> ObjectDetectionData:
+    """
+    Merges adjacent polygons.
+
+    :param combined: the input data
+    :type combined: ObjectDetectionData
+    :param max_slope_diff: the maximum difference between slopes while still being considered parallel
+    :type max_slope_diff: float
+    :param max_dist: the maximum distance between parallel vertices
+    :type max_dist: float
+    :return: the (potentially) updated annotations
+    :rtype: ObjectDetectionData
+    """
+    # for each polygon
+    #   for each vertex in polygon
+    #      compute slope
+    # determine parallel vertices between objects
+    # compute distance between parallel vertices
+    # determine sets of objects to merge
+
+    # determine vertices/slopes/intercepts
+    vertices = dict()
+    slopes = dict()
+    normalized = combined.is_normalized()
+    absolute = combined.get_absolute()
+    for i in range(len(absolute)):
+        vertices[i] = []
+        slopes[i] = []
+        xs = absolute[i].get_polygon_x()
+        ys = absolute[i].get_polygon_y()
+        for n in range(len(xs)):
+            # vertex: (x0,y0,x1,y1)
+            vertices[i].append(LineString([(xs[n - 1], ys[n - 1]), (xs[n], ys[n])]))
+            # slope: m = (y1-y0) / (x1-x0)
+            if xs[n] - xs[n - 1] == 0:
+                slope = math.inf
+            else:
+                slope = (ys[n] - ys[n - 1]) / (xs[n] - xs[n - 1])
+            slopes[i].append(slope)
+
+    # determine parallel vertices of objects with same label
+    parallel = dict()
+    for i in range(len(slopes)):
+        label_i = get_object_label(absolute[i])
+        for n in range(i + 1, len(slopes), 1):
+            # only consider objects with the same label
+            label_n = get_object_label(absolute[n])
+            if label_i != label_n:
+                continue
+            for i_i in range(len(slopes[i])):
+                for n_n in range(len(slopes[n])):
+                    is_parallel = False
+
+                    # horizontal lines
+                    if (slopes[i][i_i] == 0) and (slopes[n][n_n] == 0):
+                        is_parallel = True
+
+                    # vertical lines
+                    elif math.isinf(slopes[i][i_i]) and math.isinf(slopes[n][n_n]):
+                        is_parallel = True
+
+                    # compare slope
+                    else:
+                        slope_diff = abs(slopes[i][i_i] - slopes[n][n_n])
+                        if slope_diff <= max_slope_diff:
+                            is_parallel = True
+
+                    # check distance of parallel vertices
+                    if is_parallel:
+                        d = distance(vertices[i][i_i], vertices[n][n_n])
+                        if d <= max_dist:
+                            if i not in parallel:
+                                parallel[i] = set()
+                            parallel[i].add(n)
+
+    # create sets of objects to merge
+    merge_sets = []
+    to_merge = set()
+    for i, ns in parallel.items():
+        all_ = [i, *ns]
+        found = None
+        for a in all_:
+            to_merge.add(a)
+            for n, merge_set in enumerate(merge_sets):
+                if a in merge_set:
+                    found = n
+                    break
+            if found is not None:
+                break
+        if found is None:
+            merge_sets.append(set(all_))
+        else:
+            for a in all_:
+                merge_sets[found].add(a)
+
+    if len(merge_sets) > 0:
+        # transfer all objects that won't get merged
+        annotation_new = LocatedObjects()
+        for i, obj in enumerate(absolute):
+            if i not in to_merge:
+                annotation_new.append(obj)
+
+        # merge sets
+        for merge_set in merge_sets:
+            label = None
+            merged = None
+            for i in merge_set:
+                if label is None:
+                    label = get_object_label(absolute[i])
+                if merged is None:
+                    merged = polygon_to_shapely(absolute[i])
+                else:
+                    merged = shapely.union(merged, polygon_to_shapely(absolute[i]))
+            obj = shapely_to_locatedobject(merged, label=label)
+            annotation_new.append(obj)
+
+        # update container
+        combined.annotation = annotation_new
+        if normalized:
+            combined.to_normalized()
+
+    return combined

@@ -9,7 +9,7 @@ Extracts sub-images (incl their annotations) from the images coming through, usi
 usage: meta-sub-images [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
                        [-N LOGGER_NAME] -r REGIONS [REGIONS ...]
                        [-s {none,x-then-y,y-then-x}] [-p] [-e] [-S SUFFIX]
-                       [-b BASE_FILTER] [-R]
+                       [-b BASE_FILTER] [-R] [-m]
 
 Extracts sub-images (incl their annotations) from the images coming through,
 using the defined regions, and passes them through the base filter before
@@ -44,4 +44,7 @@ optional arguments:
                         (default: passthrough)
   -R, --rebuild_image   Rebuilds the image from the filtered sub-images rather
                         than using the input image. (default: False)
+  -m, --merge_adjacent_polygons
+                        Whether to merge adjacent polygons (object detection
+                        only). (default: False)
 ```

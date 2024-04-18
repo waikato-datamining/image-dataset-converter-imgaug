@@ -13,9 +13,9 @@ from seppl.io import locate_files, StreamWriter, BatchWriter, Writer
 from wai.common.adams.imaging.locateobjects import LocatedObject
 from wai.logging import init_logging, set_logging_level, add_logging_level
 
-from idc.api import ImageData, parse_reader, parse_writer, Reader
+from idc.api import ImageData, parse_reader, parse_writer, Reader, ObjectDetectionData, get_object_label
 from idc.core import ENV_IDC_LOGLEVEL
-from idc.imgaug.filter import new_from_template, transfer_region
+from idc.imgaug.filter import new_from_template, transfer_region, merge_polygons
 
 COMBINE_SUB_IMAGES = "idc-combine-sub-images"
 
@@ -169,7 +169,7 @@ def write_image(combined: ImageData, writer: Writer):
 
 
 def combine(input_files: List[str], group: str, x: str, y: str, width: int, height: int, one_based: bool,
-            reader: str, writer: str):
+            reader: str, writer: str, merge_adjacent_polygons: bool = False):
     """
     Generates the regions and returns them. Either specify num_rows/num_cols or row_height/col_width.
 
@@ -191,6 +191,8 @@ def combine(input_files: List[str], group: str, x: str, y: str, width: int, heig
     :type reader: str
     :param writer: the writer command-line to use for writing the combined images
     :type writer: str
+    :param merge_adjacent_polygons: whether to merge adjacent polygons (object detection only)
+    :type merge_adjacent_polygons: bool
     """
     _logger.info("Instantiating reader: %s" % reader)
     reader = parse_reader(reader)
@@ -217,6 +219,8 @@ def combine(input_files: List[str], group: str, x: str, y: str, width: int, heig
         gcoords = extract_coordinates(gfiles, x, y, one_based)
         image_name = group_id + "." + gimages[0].image_format.lower().replace("jpeg", "jpg")
         combined = merge_images(gimages, gcoords, width, height, image_name)
+        if merge_adjacent_polygons and isinstance(combined, ObjectDetectionData):
+            combined = merge_polygons(combined)
         write_image(combined, writer)
 
 
@@ -240,12 +244,13 @@ def main(args=None):
     parser.add_argument("-H", "--height", type=int, help="The height of the image.", default=None, required=True)
     parser.add_argument("-1", "--one_based", action="store_true", help="Whether the coordinates are 1-based", required=False)
     parser.add_argument("-r", "--reader", metavar="CMDLINE", type=str, help="The reader command-line to use for reading the sub-images.", required=True, default=None)
+    parser.add_argument("-m", "--merge_adjacent_polygons", action="store_true", help="Whether to merge adjacent polygons (object detection only).", required=False)
     parser.add_argument("-w", "--writer", metavar="CMDLINE", type=str, help="The writer command-line to use for writing the combined images, must contain parameters for storing the output.", required=True, default=None)
     add_logging_level(parser)
     parsed = parser.parse_args(args=args)
     set_logging_level(_logger, parsed.logging_level)
     combine(parsed.input, parsed.group, parsed.x, parsed.y, parsed.width, parsed.height, parsed.one_based,
-            parsed.reader, parsed.writer)
+            parsed.reader, parsed.writer, merge_adjacent_polygons=parsed.merge_adjacent_polygons)
 
 
 def sys_main() -> int:

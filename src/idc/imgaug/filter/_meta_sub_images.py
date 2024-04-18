@@ -8,7 +8,7 @@ from wai.logging import LOGGING_WARNING
 from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, flatten_list, make_list, \
     parse_filter
 from idc.imgaug.filter._sub_images_utils import REGION_SORTING_NONE, REGION_SORTING, PLACEHOLDERS, DEFAULT_SUFFIX, \
-    parse_regions, process_image, new_from_template, transfer_region, prune_annotations
+    parse_regions, process_image, new_from_template, transfer_region, prune_annotations, merge_polygons
 
 
 class MetaSubImages(Filter):
@@ -19,7 +19,7 @@ class MetaSubImages(Filter):
 
     def __init__(self, regions: List[str] = None, region_sorting: str = REGION_SORTING_NONE,
                  include_partial: bool = False, suppress_empty: bool = False, suffix: str = DEFAULT_SUFFIX,
-                 base_filter: str = None, rebuild_image: bool = False,
+                 base_filter: str = None, rebuild_image: bool = False, merge_adjacent_polygons: bool = False,
                  logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initializes the filter.
@@ -38,6 +38,8 @@ class MetaSubImages(Filter):
         :type base_filter: str
         :param rebuild_image: whether to rebuild the image from the filtered sub-images rather than using the input image
         :type rebuild_image: bool
+        :param merge_adjacent_polygons: whether to merge adjacent polygons
+        :type merge_adjacent_polygons: bool
         :param logger_name: the name to use for the logger
         :type logger_name: str
         :param logging_level: the logging level to use
@@ -51,6 +53,7 @@ class MetaSubImages(Filter):
         self.suffix = suffix
         self.base_filter = base_filter
         self.rebuild_image = rebuild_image
+        self.merge_adjacent_polygons = merge_adjacent_polygons
         self._regions_xyxy = None
         self._regions_lobj = None
         self._base_filter = None
@@ -106,6 +109,7 @@ class MetaSubImages(Filter):
         parser.add_argument("-S", "--suffix", type=str, default=DEFAULT_SUFFIX, help="The suffix pattern to use for the generated sub-images, available placeholders: " + "|".join(PLACEHOLDERS), required=False)
         parser.add_argument("-b", "--base_filter", type=str, default="passthrough", help="The base filter to pass the sub-images through", required=False)
         parser.add_argument("-R", "--rebuild_image", action="store_true", help="Rebuilds the image from the filtered sub-images rather than using the input image.", required=False)
+        parser.add_argument("-m", "--merge_adjacent_polygons", action="store_true", help="Whether to merge adjacent polygons (object detection only).", required=False)
         return parser
 
     def _apply_args(self, ns: argparse.Namespace):
@@ -123,6 +127,7 @@ class MetaSubImages(Filter):
         self.suffix = ns.suffix
         self.base_filter = ns.base_filter
         self.rebuild_image = ns.rebuild_image
+        self.merge_adjacent_polygons = ns.merge_adjacent_polygons
 
     def initialize(self):
         """
@@ -143,6 +148,8 @@ class MetaSubImages(Filter):
             self.suffix = DEFAULT_SUFFIX
         if self.rebuild_image is None:
             self.rebuild_image = False
+        if self.merge_adjacent_polygons is None:
+            self.merge_adjacent_polygons = False
 
         # configure base filter
         self._base_filter = parse_filter(self.base_filter)
@@ -173,6 +180,8 @@ class MetaSubImages(Filter):
                     new_sub_item = self._base_filter.process(sub_item)
                     transfer_region(new_item, new_sub_item, sub_region, rebuild_image=self.rebuild_image)
                 prune_annotations(new_item)
+                if self.merge_adjacent_polygons and isinstance(new_item, ObjectDetectionData):
+                    new_item = merge_polygons(new_item)
                 result.append(new_item)
 
         return flatten_list(result)
