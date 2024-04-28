@@ -434,6 +434,8 @@ def transfer_region(full_image, sub_image, region: LocatedObject, rebuild_image:
                 y = region.y
                 w = region.width
                 h = region.height
+                if (not full_image.has_annotation()) or (not full_image.has_layer(label)):
+                    full_image.new_layer(label)
                 full_image.annotation.layers[label][y:y+h, x:x+w] = sub_image.annotation.layers[label]
 
         # unknown
