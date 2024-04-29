@@ -9,6 +9,7 @@ Extracts sub-images (incl their annotations) from the images coming through, usi
 usage: sub-images [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
                   [-N LOGGER_NAME] -r REGIONS [REGIONS ...]
                   [-s {none,x-then-y,y-then-x}] [-p] [-e] [-S SUFFIX]
+                  [--pad_width PAD_WIDTH] [--pad_height PAD_HEIGHT]
 
 Extracts sub-images (incl their annotations) from the images coming through,
 using the defined regions. When using x/y in the suffix, these images can be
@@ -38,4 +39,10 @@ optional arguments:
                         images, available placeholders:
                         {X}|{Y}|{W}|{H}|{X0}|{Y0}|{X1}|{Y1}|{INDEX} (default:
                         -{INDEX})
+  --pad_width PAD_WIDTH
+                        The width to pad the sub-images to (on the right).
+                        (default: None)
+  --pad_height PAD_HEIGHT
+                        The height to pad the sub-images to (at the bottom).
+                        (default: None)
 ```

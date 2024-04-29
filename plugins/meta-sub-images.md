@@ -9,7 +9,8 @@ Extracts sub-images (incl their annotations) from the images coming through, usi
 usage: meta-sub-images [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
                        [-N LOGGER_NAME] -r REGIONS [REGIONS ...]
                        [-s {none,x-then-y,y-then-x}] [-p] [-e] [-S SUFFIX]
-                       [-b BASE_FILTER] [-R] [-m]
+                       [-b BASE_FILTER] [-R] [-m] [--pad_width PAD_WIDTH]
+                       [--pad_height PAD_HEIGHT]
 
 Extracts sub-images (incl their annotations) from the images coming through,
 using the defined regions, and passes them through the base filter before
@@ -47,4 +48,10 @@ optional arguments:
   -m, --merge_adjacent_polygons
                         Whether to merge adjacent polygons (object detection
                         only). (default: False)
+  --pad_width PAD_WIDTH
+                        The width to pad the sub-images to (on the right).
+                        (default: None)
+  --pad_height PAD_HEIGHT
+                        The height to pad the sub-images to (at the bottom).
+                        (default: None)
 ```

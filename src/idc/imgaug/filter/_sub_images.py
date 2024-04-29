@@ -16,6 +16,7 @@ class SubImages(Filter):
 
     def __init__(self, regions: List[str] = None, region_sorting: str = REGION_SORTING_NONE,
                  include_partial: bool = False, suppress_empty: bool = False, suffix: str = DEFAULT_SUFFIX,
+                 pad_width: int = None, pad_height: int = None,
                  logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initializes the filter.
@@ -30,6 +31,10 @@ class SubImages(Filter):
         :type suppress_empty: bool
         :param suffix: the suffix pattern to use for the generated sub-images (with placeholders)
         :type suffix: str
+        :param pad_width: the width to pad to, return as is if None
+        :type pad_width: int
+        :param pad_height: the height to pad to, return as is if None
+        :type pad_height: int
         :param logger_name: the name to use for the logger
         :type logger_name: str
         :param logging_level: the logging level to use
@@ -41,6 +46,8 @@ class SubImages(Filter):
         self.include_partial = include_partial
         self.suppress_empty = suppress_empty
         self.suffix = suffix
+        self.pad_width = pad_width
+        self.pad_height = pad_height
         self._regions_xyxy = None
         self._regions_lobj = None
 
@@ -95,6 +102,8 @@ class SubImages(Filter):
         parser.add_argument("-e", "--suppress_empty", action="store_true", help="Suppresses sub-images that have no annotations", required=False)
         parser.add_argument("-S", "--suffix", type=str, default=DEFAULT_SUFFIX, help="The suffix pattern to use for the generated sub-images, available placeholders: " + "|".join(
             PLACEHOLDERS), required=False)
+        parser.add_argument("--pad_width", type=int, default=None, help="The width to pad the sub-images to (on the right).", required=False)
+        parser.add_argument("--pad_height", type=int, default=None, help="The height to pad the sub-images to (at the bottom).", required=False)
         return parser
 
     def _apply_args(self, ns: argparse.Namespace):
@@ -110,6 +119,8 @@ class SubImages(Filter):
         self.include_partial = ns.include_partial
         self.suppress_empty = ns.suppress_empty
         self.suffix = ns.suffix
+        self.pad_width = ns.pad_width
+        self.pad_height = ns.pad_height
 
     def initialize(self):
         """
@@ -141,12 +152,13 @@ class SubImages(Filter):
 
         for item in make_list(data):
             sub_items = process_image(item, self._regions_lobj, self._regions_xyxy, self.suffix,
-                                      self.suppress_empty, self.include_partial, self.logger())
+                                      self.suppress_empty, self.include_partial, self.logger(),
+                                      pad_width=self.pad_width, pad_height=self.pad_height)
             # failed to process?
             if sub_items is None:
                 result.append(item)
             else:
-                for _, sub_item in sub_items:
+                for _, sub_item, _ in sub_items:
                     result.append(sub_item)
 
         return flatten_list(result)

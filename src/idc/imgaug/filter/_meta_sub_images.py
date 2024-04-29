@@ -1,4 +1,5 @@
 import argparse
+import numpy as np
 from typing import List
 
 from seppl import Initializable, init_initializable
@@ -8,7 +9,7 @@ from wai.logging import LOGGING_WARNING
 from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, flatten_list, make_list, \
     parse_filter
 from idc.imgaug.filter._sub_images_utils import REGION_SORTING_NONE, REGION_SORTING, PLACEHOLDERS, DEFAULT_SUFFIX, \
-    parse_regions, process_image, new_from_template, transfer_region, prune_annotations, merge_polygons
+    parse_regions, process_image, new_from_template, transfer_region, prune_annotations, merge_polygons, crop_image
 
 
 class MetaSubImages(Filter):
@@ -20,6 +21,7 @@ class MetaSubImages(Filter):
     def __init__(self, regions: List[str] = None, region_sorting: str = REGION_SORTING_NONE,
                  include_partial: bool = False, suppress_empty: bool = False, suffix: str = DEFAULT_SUFFIX,
                  base_filter: str = None, rebuild_image: bool = False, merge_adjacent_polygons: bool = False,
+                 pad_width: int = None, pad_height: int = None,
                  logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initializes the filter.
@@ -40,6 +42,10 @@ class MetaSubImages(Filter):
         :type rebuild_image: bool
         :param merge_adjacent_polygons: whether to merge adjacent polygons
         :type merge_adjacent_polygons: bool
+        :param pad_width: the width to pad to, return as is if None
+        :type pad_width: int
+        :param pad_height: the height to pad to, return as is if None
+        :type pad_height: int
         :param logger_name: the name to use for the logger
         :type logger_name: str
         :param logging_level: the logging level to use
@@ -54,6 +60,8 @@ class MetaSubImages(Filter):
         self.base_filter = base_filter
         self.rebuild_image = rebuild_image
         self.merge_adjacent_polygons = merge_adjacent_polygons
+        self.pad_width = pad_width
+        self.pad_height = pad_height
         self._regions_xyxy = None
         self._regions_lobj = None
         self._base_filter = None
@@ -110,6 +118,8 @@ class MetaSubImages(Filter):
         parser.add_argument("-b", "--base_filter", type=str, default="passthrough", help="The base filter to pass the sub-images through", required=False)
         parser.add_argument("-R", "--rebuild_image", action="store_true", help="Rebuilds the image from the filtered sub-images rather than using the input image.", required=False)
         parser.add_argument("-m", "--merge_adjacent_polygons", action="store_true", help="Whether to merge adjacent polygons (object detection only).", required=False)
+        parser.add_argument("--pad_width", type=int, default=None, help="The width to pad the sub-images to (on the right).", required=False)
+        parser.add_argument("--pad_height", type=int, default=None, help="The height to pad the sub-images to (at the bottom).", required=False)
         return parser
 
     def _apply_args(self, ns: argparse.Namespace):
@@ -128,6 +138,8 @@ class MetaSubImages(Filter):
         self.base_filter = ns.base_filter
         self.rebuild_image = ns.rebuild_image
         self.merge_adjacent_polygons = ns.merge_adjacent_polygons
+        self.pad_width = ns.pad_width
+        self.pad_height = ns.pad_height
 
     def initialize(self):
         """
@@ -170,15 +182,17 @@ class MetaSubImages(Filter):
 
         for item in make_list(data):
             sub_items = process_image(item, self._regions_lobj, self._regions_xyxy, self.suffix,
-                                      self.suppress_empty, self.include_partial, self.logger())
+                                      self.suppress_empty, self.include_partial, self.logger(),
+                                      pad_width=self.pad_width, pad_height=self.pad_height)
             # failed to process?
             if sub_items is None:
                 result.append(item)
             else:
                 new_item = new_from_template(item, rebuild_image=self.rebuild_image)
-                for sub_region, sub_item in sub_items:
+                for sub_region, sub_item, orig_dims in sub_items:
                     new_sub_item = self._base_filter.process(sub_item)
-                    transfer_region(new_item, new_sub_item, sub_region, rebuild_image=self.rebuild_image)
+                    transfer_region(new_item, new_sub_item, sub_region, rebuild_image=self.rebuild_image,
+                                    crop_width=orig_dims.width, crop_height=orig_dims.height)
                 prune_annotations(new_item)
                 if self.merge_adjacent_polygons and isinstance(new_item, ObjectDetectionData):
                     new_item = merge_polygons(new_item)

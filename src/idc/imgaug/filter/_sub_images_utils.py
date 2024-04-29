@@ -3,7 +3,7 @@ import logging
 import math
 import os
 import statistics
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Union
 
 import numpy as np
 import shapely
@@ -190,17 +190,17 @@ def shapely_to_locatedobject(geometry: BaseGeometry, label: str = None) -> Locat
     return result
 
 
-def fit_located_object(index: int, region: LocatedObject, annotation: LocatedObject, logger: logging.Logger) -> LocatedObject:
+def fit_located_object(index: int, region: LocatedObject, annotation: LocatedObject, logger: Optional[logging.Logger]) -> LocatedObject:
     """
     Fits the annotation into the specified region, adjusts size if necessary.
 
-    :param index: the index of the current region
+    :param index: the index of the current region, gets added to meta-data if >=0
     :type index: int
     :param region: the region object to fit the annotation in
     :type region: LocatedObject
     :param annotation: the annotation to fit
     :type annotation: LocatedObject
-    :param logger: the logger to use
+    :param logger: the logger to use, can be None
     :type logger: logging.Logger
     :return: the adjusted annotation
     :rtype: LocatedObject
@@ -210,8 +210,9 @@ def fit_located_object(index: int, region: LocatedObject, annotation: LocatedObj
     sintersect = sbbox.intersection(sregion)
     minx, miny, maxx, maxy = [int(x) for x in sintersect.bounds]
     result = LocatedObject(x=minx-region.x, y=miny-region.y, width=maxx-minx+1, height=maxy-miny+1, **annotation.metadata)
-    result.metadata["region_index"] = index
-    result.metadata["region_xywh"] = "%d,%d,%d,%d" % (region.x, region.y, region.width, region.height)
+    if index > -1:
+        result.metadata["region_index"] = index
+        result.metadata["region_xywh"] = "%d,%d,%d,%d" % (region.x, region.y, region.width, region.height)
 
     if annotation.has_polygon():
         spolygon = polygon_to_shapely(annotation)
@@ -221,7 +222,11 @@ def fit_located_object(index: int, region: LocatedObject, annotation: LocatedObj
     try:
         sintersect = spolygon.intersection(sregion)
     except:
-        logger.warning("Failed to compute intersection!")
+        msg = "Failed to compute intersection!"
+        if logger is None:
+            print(msg)
+        else:
+            logger.warning(msg)
         sintersect = None
 
     if isinstance(sintersect, GeometryCollection):
@@ -242,7 +247,11 @@ def fit_located_object(index: int, region: LocatedObject, annotation: LocatedObj
             points.append(WaiPoint(x=x_list[i]-region.x, y=y_list[i]-region.y))
         result.set_polygon(WaiPolygon(*points))
     else:
-        logger.warning("Unhandled geometry type returned from intersection, skipping: %s" % str(type(sintersect)))
+        msg = "Unhandled geometry type returned from intersection, skipping: %s" % str(type(sintersect))
+        if logger is None:
+            print(msg)
+        else:
+            logger.warning(msg)
 
     return result
 
@@ -274,8 +283,89 @@ def fit_layers(region: LocatedObject, annotations: ImageSegmentationAnnotations,
     return ImageSegmentationAnnotations(annotations.labels[:], layers)
 
 
+def pad_image(img: Union[Image.Image, np.ndarray], pad_width: Optional[int] = None, pad_height: Optional[int] = None) -> Image:
+    """
+    Pads the image/layer if necessary (on the right/bottom).
+
+    :param img: the image to pad
+    :type img: Image.Image/np.ndarray
+    :param pad_width: the width to pad to, return as is if None
+    :type pad_width: int
+    :param pad_height: the height to pad to, return as is if None
+    :type pad_height: int
+    :return: the (potentially) padded image
+    :rtype: Image.Image/np.ndarray
+    """
+    result = img
+    if isinstance(img, Image.Image):
+        width, height = img.size
+    else:
+        height = img.shape[0]
+        width = img.shape[1]
+    pad = False
+
+    if (pad_width is not None) and (pad_height is not None):
+        pad = (width != pad_width) or (height != pad_height)
+    elif pad_width is not None:
+        pad = width != pad_width
+        pad_height = height
+    elif pad_height is not None:
+        pad = height != pad_height
+        pad_width = width
+
+    if pad:
+        if isinstance(img, Image.Image):
+            result = Image.new(img.mode, (pad_width, pad_height))
+            result.paste(img)
+        else:
+            result = np.zeros((pad_height, pad_width), dtype=img.dtype)
+            result[0:height, 0:width] = img
+
+    return result
+
+
+def crop_image(img: Union[Image.Image, np.ndarray], crop_width: Optional[int] = None, crop_height: Optional[int] = None) -> Image:
+    """
+    Crops the image/layer if necessary (removes on the right/bottom).
+
+    :param img: the image to pad
+    :type img: Image.Image/np.ndarray
+    :param crop_width: the width to crop to, return as is if None
+    :type crop_width: int
+    :param crop_height: the height to crop to, return as is if None
+    :type crop_height: int
+    :return: the (potentially) cropped image
+    :rtype: Image.Image/np.ndarray
+    """
+    result = img
+    if isinstance(img, Image.Image):
+        width, height = img.size
+    else:
+        height = img.shape[0]
+        width = img.shape[1]
+    crop = False
+
+    if (crop_width is not None) and (crop_height is not None):
+        crop = (width != crop_width) or (height != crop_height)
+    elif crop_width is not None:
+        crop = width != crop_width
+        crop_height = height
+    elif crop_height is not None:
+        crop = height != crop_height
+        crop_width = width
+
+    if crop:
+        if isinstance(img, Image.Image):
+            result = img.crop((0, 0, crop_width, crop_height))
+        else:
+            result = img[0:crop_height, 0:crop_width]
+
+    return result
+
+
 def process_image(item: ImageData, regions_lobj: List[LocatedObject], regions_xyxy: List[Tuple], suffix: str,
-                  suppress_empty: bool, include_partial: bool, logger: logging.Logger) -> Optional[List[Tuple[LocatedObject, ImageData]]]:
+                  suppress_empty: bool, include_partial: bool, logger: logging.Logger,
+                  pad_width: Optional[int] = None, pad_height: Optional[int] = None) -> Optional[List[Tuple[LocatedObject, ImageData, LocatedObject]]]:
     """
     Processes the image according to the defined regions and returns a list of tuples consisting of the located
     object for the region and the new image/annotations.
@@ -294,7 +384,11 @@ def process_image(item: ImageData, regions_lobj: List[LocatedObject], regions_xy
     :type include_partial: bool
     :param logger: for logging purposes
     :type logger: logging.Logger
-    :return: the list of tuples (located object of region, new image)
+    :param pad_width: the width to pad to, return as is if None
+    :type pad_width: int
+    :param pad_height: the height to pad to, return as is if None
+    :type pad_height: int
+    :return: the list of tuples (located object of region, new image, located object of original dims)
     :rtype: list
     """
     result = []
@@ -310,6 +404,8 @@ def process_image(item: ImageData, regions_lobj: List[LocatedObject], regions_xy
         if y1 >= item.image_height:
             y1 = item.image_height - 1
         sub_image = pil.crop((x0, y0, x1+1, y1+1))
+        orig_dims = LocatedObject(0, 0, sub_image.size[0], sub_image.size[1])
+        sub_image = pad_image(sub_image, pad_width=pad_width, pad_height=pad_height)
         sub_bytes = io.BytesIO()
         sub_image.save(sub_bytes, format=item.image_format)
         image_name_new = region_filename(item.image_name, regions_lobj, regions_xyxy, region_index, suffix)
@@ -321,7 +417,7 @@ def process_image(item: ImageData, regions_lobj: List[LocatedObject], regions_xy
             if not suppress_empty or (annotation is not None):
                 item_new = ImageClassificationData(image_name=image_name_new, data=sub_bytes.getvalue(),
                                                    annotation=annotation, metadata=item.get_metadata())
-                result.append((region_lobj, item_new))
+                result.append((region_lobj, item_new, orig_dims))
         elif isinstance(item, ObjectDetectionData):
             new_objects = []
             if item.has_annotation():
@@ -332,17 +428,19 @@ def process_image(item: ImageData, regions_lobj: List[LocatedObject], regions_xy
             if not suppress_empty or (len(new_objects) > 0):
                 item_new = ObjectDetectionData(image_name=image_name_new, data=sub_bytes.getvalue(),
                                                annotation=LocatedObjects(new_objects), metadata=item.get_metadata())
-                result.append((region_lobj, item_new))
+                result.append((region_lobj, item_new, orig_dims))
         elif isinstance(item, ImageSegmentationData):
             new_annotations = ImageSegmentationAnnotations(list(), dict())
             if item.has_annotation():
                 new_annotations = fit_layers(region_lobj, item.annotation, suppress_empty)
             if not suppress_empty or (len(new_annotations.layers) > 0):
+                for label in new_annotations.layers:
+                    new_annotations.layers[label] = pad_image(new_annotations.layers[label], pad_width=pad_width, pad_height=pad_height)
                 if len(new_annotations.layers) == 0:
                     new_annotations = None
                 item_new = ImageSegmentationData(image_name=image_name_new, data=sub_bytes.getvalue(),
                                                  annotation=new_annotations, metadata=item.get_metadata())
-                result.append((region_lobj, item_new))
+                result.append((region_lobj, item_new, orig_dims))
         else:
             logger.warning("Unhandled data (%s), skipping!" % str(type(item)))
             return None
@@ -389,7 +487,8 @@ def new_from_template(item, rebuild_image: bool = False):
     return result
 
 
-def transfer_region(full_image, sub_image, region: LocatedObject, rebuild_image: bool = False):
+def transfer_region(full_image, sub_image, region: LocatedObject, rebuild_image: bool = False,
+                    crop_width: int = None, crop_height: int = None):
     """
     Transfers the sub image into the full image according to the region.
     Annotations get transferred as well.
@@ -400,10 +499,15 @@ def transfer_region(full_image, sub_image, region: LocatedObject, rebuild_image:
     :type region: LocatedObject
     :param rebuild_image: whether to rebuild the image from the sub-images (ie start with empty) or use input one
     :type rebuild_image: bool
+    :param crop_width: the width to crop to, ignored if None
+    :type crop_width: int
+    :param crop_height: the height to crop to, ignored if None
+    :type crop_height: int
     """
     # transfer image
     if rebuild_image:
-        full_image.image.paste(sub_image.image, (region.x, region.y))
+        cropped = crop_image(sub_image.image, crop_width=crop_width, crop_height=crop_height)
+        full_image.image.paste(cropped, (region.x, region.y))
 
     # transfer annotations
     if sub_image.annotation is not None:
@@ -419,12 +523,30 @@ def transfer_region(full_image, sub_image, region: LocatedObject, rebuild_image:
 
         # object detection (relocate located objects)
         elif isinstance(full_image, ObjectDetectionData):
+            img_width = full_image.image_width
+            img_height = full_image.image_height
             for lobj in sub_image.annotation:
                 new_lobj = LocatedObject(lobj.x + region.x, lobj.y + region.y, lobj.width, lobj.height, **lobj.metadata)
                 if lobj.has_polygon:
                     xs = [x+region.x for x in lobj.get_polygon_x()]
                     ys = [y+region.y for y in lobj.get_polygon_y()]
                     new_lobj.set_polygon(WaiPolygon(*(WaiPoint(x, y) for x, y in zip(xs, ys))))
+                # skip objects to the right of the image
+                if new_lobj.x >= img_width:
+                    continue
+                # skip objects below the bottom of the image
+                if new_lobj.y >= img_height:
+                    continue
+                # fit object if necessary
+                fit = False
+                if (new_lobj.x < img_width) and (new_lobj.x + new_lobj.width >= img_width):
+                    fit = True
+                if (new_lobj.y < img_height) and (new_lobj.y + new_lobj.height >= img_height):
+                    fit = True
+                if fit:
+                    region = LocatedObject(0, 0, img_width, img_height)
+                    new_lobj = fit_located_object(-1, region, new_lobj, None)
+                # add object
                 full_image.annotation.append(new_lobj)
 
         # image segmentation
@@ -436,7 +558,9 @@ def transfer_region(full_image, sub_image, region: LocatedObject, rebuild_image:
                 h = region.height
                 if (not full_image.has_annotation()) or (not full_image.has_layer(label)):
                     full_image.new_layer(label)
-                full_image.annotation.layers[label][y:y+h, x:x+w] = sub_image.annotation.layers[label]
+                layer = sub_image.annotation.layers[label]
+                layer = crop_image(layer, crop_width=crop_width, crop_height=crop_height)
+                full_image.annotation.layers[label][y:y + h, x:x + w] = layer
 
         # unknown
         else:
