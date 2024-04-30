@@ -191,6 +191,9 @@ class MetaSubImages(Filter):
                 new_item = new_from_template(item, rebuild_image=self.rebuild_image)
                 for sub_region, sub_item, orig_dims in sub_items:
                     new_sub_item = self._base_filter.process(sub_item)
+                    if isinstance(new_sub_item, list):
+                        self.logger().error("Expected a single item from base filter, but received a list (#items=%d) - skipping!" % len(new_sub_item))
+                        continue
                     transfer_region(new_item, new_sub_item, sub_region, rebuild_image=self.rebuild_image,
                                     crop_width=orig_dims.width, crop_height=orig_dims.height)
                 prune_annotations(new_item)
