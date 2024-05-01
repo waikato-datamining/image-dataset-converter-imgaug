@@ -44,8 +44,8 @@ setup(
             "idc-generate-regions=idc.imgaug.tool.generate_regions:sys_main",
             "idc-combine-sub-images=idc.imgaug.tool.combine_sub_images:sys_main",
         ],
-        "idc.filters": [
-            "idc_imgaug_filters1=idc.imgaug.filter:seppl.io.Filter",
+        "class_lister": [
+            "idc.imgaug=idc.imgaug.class_lister",
         ],
     },
 )
