@@ -1,5 +1,5 @@
 # image-dataset-converter-imgaug
-Image augmentation extension for the image-dataset-converter library.
+Image augmentation extension for the [image-dataset-converter](https://github.com/waikato-datamining/image-dataset-converter) library.
 
 
 ## Installation
