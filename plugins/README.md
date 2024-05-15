@@ -1,6 +1,7 @@
 # imgaug plugins
 ## Filters
 * [change-grayscale](change-grayscale.md)
+* [clip-grayscale](clip-grayscale.md)
 * [crop](crop.md)
 * [flip](flip.md)
 * [gaussian-blur](gaussian-blur.md)

@@ -2,6 +2,7 @@ from ._augment_util import augment_image
 from ._base_filter import BaseFilter
 from ._base_image_augmentation import BaseImageAugmentation
 from ._change_grayscale import ChangeGrayscale
+from ._clip_grayscale import ClipGrayscale
 from ._crop import Crop
 from ._flip import Flip
 from ._gaussian_blur import GaussianBlur
