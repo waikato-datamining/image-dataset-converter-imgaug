@@ -13,7 +13,7 @@ from wai.common.adams.imaging.locateobjects import LocatedObject, LocatedObjects
 from wai.common.geometry import Point as WaiPoint, Polygon as WaiPolygon
 
 from idc.api import ImageSegmentationAnnotations, ImageClassificationData, ImageSegmentationData, ObjectDetectionData, \
-    ImageData, get_object_label, polygon_to_shapely, bbox_to_shapely, shapely_to_locatedobject
+    ImageData, get_object_label, locatedobject_polygon_to_shapely, locatedobject_bbox_to_shapely, shapely_to_locatedobject
 
 REGION_SORTING_NONE = "none"
 REGION_SORTING_XY = "x-then-y"
@@ -138,8 +138,8 @@ def fit_located_object(index: int, region: LocatedObject, annotation: LocatedObj
     :return: the adjusted annotation
     :rtype: LocatedObject
     """
-    sregion = bbox_to_shapely(region)
-    sbbox = bbox_to_shapely(annotation)
+    sregion = locatedobject_bbox_to_shapely(region)
+    sbbox = locatedobject_bbox_to_shapely(annotation)
     sintersect = sbbox.intersection(sregion)
     minx, miny, maxx, maxy = [int(x) for x in sintersect.bounds]
     result = LocatedObject(x=minx-region.x, y=miny-region.y, width=maxx-minx+1, height=maxy-miny+1, **annotation.metadata)
@@ -148,9 +148,9 @@ def fit_located_object(index: int, region: LocatedObject, annotation: LocatedObj
         result.metadata["region_xywh"] = "%d,%d,%d,%d" % (region.x, region.y, region.width, region.height)
 
     if annotation.has_polygon():
-        spolygon = polygon_to_shapely(annotation)
+        spolygon = locatedobject_polygon_to_shapely(annotation)
     else:
-        spolygon = bbox_to_shapely(annotation)
+        spolygon = locatedobject_bbox_to_shapely(annotation)
 
     try:
         sintersect = spolygon.intersection(sregion)
@@ -682,9 +682,9 @@ def merge_polygons(combined: ObjectDetectionData, max_slope_diff: float = 1e-6, 
                 if "score" in absolute[i].metadata:
                     scores.append(float(absolute[i].metadata["score"]))
                 if merged is None:
-                    merged = polygon_to_shapely(absolute[i])
+                    merged = locatedobject_polygon_to_shapely(absolute[i])
                 else:
-                    merged = shapely.union(merged, polygon_to_shapely(absolute[i]))
+                    merged = shapely.union(merged, locatedobject_polygon_to_shapely(absolute[i]))
             obj = shapely_to_locatedobject(merged, label=label)
             # set average score
             if len(scores) > 0:
