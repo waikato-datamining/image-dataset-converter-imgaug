@@ -5,12 +5,11 @@ from typing import List, Tuple, Optional
 
 import numpy as np
 from PIL import Image
-from shapely import Polygon, GeometryCollection, MultiPolygon
 from wai.common.adams.imaging.locateobjects import LocatedObject, LocatedObjects
 from wai.common.geometry import Point as WaiPoint, Polygon as WaiPolygon
 
 from idc.api import ImageSegmentationAnnotations, ImageClassificationData, ImageSegmentationData, ObjectDetectionData, \
-    ImageData, locatedobject_polygon_to_shapely, locatedobject_bbox_to_shapely, crop_image, pad_image
+    ImageData, crop_image, pad_image, fit_layers, fit_located_object
 
 REGION_SORTING_NONE = "none"
 REGION_SORTING_XY = "x-then-y"
@@ -118,99 +117,6 @@ def region_filename(path: str, regions_lobj: List[LocatedObject], regions_xyxy: 
     suffix = suffix.replace(PH_W, str(regions_lobj[index].width))
     suffix = suffix.replace(PH_H, str(regions_lobj[index].height))
     return parts[0] + suffix + parts[1]
-
-
-def fit_located_object(index: int, region: LocatedObject, annotation: LocatedObject, logger: Optional[logging.Logger]) -> LocatedObject:
-    """
-    Fits the annotation into the specified region, adjusts size if necessary.
-
-    :param index: the index of the current region, gets added to meta-data if >=0
-    :type index: int
-    :param region: the region object to fit the annotation in
-    :type region: LocatedObject
-    :param annotation: the annotation to fit
-    :type annotation: LocatedObject
-    :param logger: the logger to use, can be None
-    :type logger: logging.Logger
-    :return: the adjusted annotation
-    :rtype: LocatedObject
-    """
-    sregion = locatedobject_bbox_to_shapely(region)
-    sbbox = locatedobject_bbox_to_shapely(annotation)
-    sintersect = sbbox.intersection(sregion)
-    minx, miny, maxx, maxy = [int(x) for x in sintersect.bounds]
-    result = LocatedObject(x=minx-region.x, y=miny-region.y, width=maxx-minx+1, height=maxy-miny+1, **annotation.metadata)
-    if index > -1:
-        result.metadata["region_index"] = index
-        result.metadata["region_xywh"] = "%d,%d,%d,%d" % (region.x, region.y, region.width, region.height)
-
-    if annotation.has_polygon():
-        spolygon = locatedobject_polygon_to_shapely(annotation)
-    else:
-        spolygon = locatedobject_bbox_to_shapely(annotation)
-
-    try:
-        sintersect = spolygon.intersection(sregion)
-    except:
-        msg = "Failed to compute intersection!"
-        if logger is None:
-            print(msg)
-        else:
-            logger.warning(msg)
-        sintersect = None
-
-    if isinstance(sintersect, GeometryCollection):
-        for x in sintersect.geoms:
-            if isinstance(x, Polygon):
-                sintersect = x
-                break
-    elif isinstance(sintersect, MultiPolygon):
-        for x in sintersect.geoms:
-            if isinstance(x, Polygon):
-                sintersect = x
-                break
-
-    if isinstance(sintersect, Polygon):
-        x_list, y_list = sintersect.exterior.coords.xy
-        points = []
-        for i in range(len(x_list)):
-            points.append(WaiPoint(x=x_list[i]-region.x, y=y_list[i]-region.y))
-        result.set_polygon(WaiPolygon(*points))
-    else:
-        msg = "Unhandled geometry type returned from intersection, skipping: %s" % str(type(sintersect))
-        if logger is None:
-            print(msg)
-        else:
-            logger.warning(msg)
-
-    return result
-
-
-def fit_layers(region: LocatedObject, annotations: ImageSegmentationAnnotations, suppress_empty: bool) -> ImageSegmentationAnnotations:
-    """
-    Crops the layers to the region.
-
-    :param region: the region to crop the layers to
-    :type region: LocatedObject
-    :param annotations: the annotations to crop
-    :type annotations: ImageSegmentationAnnotations
-    :param suppress_empty: whether to suppress empty annotations
-    :type suppress_empty: bool
-    :return: the updated annotations
-    :rtype: ImageSegmentationAnnotations
-    """
-    layers = dict()
-    for label in annotations.layers:
-        layer = annotations.layers[label][region.y:region.y+region.height, region.x:region.x+region.width]
-        add = True
-        if suppress_empty:
-            unique = np.unique(layer)
-            # only background? -> skip
-            if (len(unique) == 1) and (unique[0] == 0):
-                add = False
-        if add:
-            layers[label] = layer
-    return ImageSegmentationAnnotations(annotations.labels[:], layers)
 
 
 def process_image(item: ImageData, regions_lobj: List[LocatedObject], regions_xyxy: List[Tuple], suffix: str,
@@ -450,32 +356,3 @@ def prune_annotations(image):
 
     else:
         raise Exception("Unhandled type of data: %s" % str(type(image)))
-
-
-def overlapping_lines(line1: Tuple[int, int], line2: Tuple[int, int]) -> bool:
-    """
-    Checks whether the lines are overlapping.
-
-    :param line1: the first line (start,end)
-    :type line1: tuple
-    :param line2: the second line (start,eng)
-    :type line2: tuple
-    :return: True if overlap
-    :rtype: bool
-    """
-    l1_s, l1_e = line1
-    l2_s, l2_e = line2
-    # line1 is completely to the left of line2
-    if (l1_s < l2_s) and (l1_e < l2_s):
-        return False
-    # line1 is completely to the right of line2
-    if (l1_s > l2_e) and (l1_e > l2_e):
-        return False
-    # line2 is completely to the left of line1
-    if (l2_s < l1_s) and (l2_e < l1_s):
-        return False
-    # line2 is completely to the right of line1
-    if (l2_s > l1_e) and (l2_e > l1_e):
-        return False
-    # some overlap
-    return True
