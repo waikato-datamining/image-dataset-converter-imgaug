@@ -1,5 +1,4 @@
 import argparse
-import numpy as np
 from typing import List
 
 from seppl import Initializable, init_initializable
@@ -7,9 +6,9 @@ from seppl.io import Filter
 from wai.logging import LOGGING_WARNING
 
 from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, flatten_list, make_list, \
-    parse_filter
+    parse_filter, merge_polygons
 from idc.imgaug.filter._sub_images_utils import REGION_SORTING_NONE, REGION_SORTING, PLACEHOLDERS, DEFAULT_SUFFIX, \
-    parse_regions, process_image, new_from_template, transfer_region, prune_annotations, merge_polygons, crop_image
+    parse_regions, process_image, new_from_template, transfer_region, prune_annotations
 
 
 class MetaSubImages(Filter):

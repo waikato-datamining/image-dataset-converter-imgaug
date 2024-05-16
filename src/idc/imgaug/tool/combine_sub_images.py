@@ -13,9 +13,9 @@ from seppl.io import locate_files, StreamWriter, BatchWriter, Writer
 from wai.common.adams.imaging.locateobjects import LocatedObject
 from wai.logging import init_logging, set_logging_level, add_logging_level
 
-from idc.api import ImageData, parse_reader, parse_writer, Reader, ObjectDetectionData
+from idc.api import ImageData, parse_reader, parse_writer, Reader, ObjectDetectionData, merge_polygons
 from idc.core import ENV_IDC_LOGLEVEL
-from idc.imgaug.filter import new_from_template, transfer_region, merge_polygons
+from idc.imgaug.filter import new_from_template, transfer_region
 
 COMBINE_SUB_IMAGES = "idc-combine-sub-images"
 
