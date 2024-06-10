@@ -3,6 +3,7 @@
 * [change-grayscale](change-grayscale.md)
 * [clip-grayscale](clip-grayscale.md)
 * [crop](crop.md)
+* [enhance](enhance.md)
 * [flip](flip.md)
 * [gaussian-blur](gaussian-blur.md)
 * [hsl-grayscale](hsl-grayscale.md)
