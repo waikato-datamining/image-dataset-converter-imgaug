@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.0.2 (????-??-??)
+0.0.2 (2024-06-13)
 ------------------
 
 - added `change-grayscale` filter for change pixel values of grayscale images by a factor of fixed value
