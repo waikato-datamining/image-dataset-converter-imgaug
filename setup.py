@@ -35,6 +35,7 @@ setup(
         "imgaug>=0.4.0",
         "matplotlib",
         "Shapely",
+        "simple-mask-utils==0.0.1"
     ],
     version="0.0.2",
     author='Peter Reutemann',

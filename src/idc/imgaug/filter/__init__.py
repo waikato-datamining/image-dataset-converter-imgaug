@@ -5,6 +5,7 @@ from ._change_grayscale import ChangeGrayscale
 from ._clip_grayscale import ClipGrayscale
 from ._crop import Crop
 from ._enhance import Enhance, ENHANCEMENTS, ENHANCEMENT_CONTRAST, ENHANCEMENT_COLOR, ENHANCEMENT_SHARPNESS, ENHANCEMENT_BRIGHTNESS
+from ._find_contours import FindContours, CONNECTIVITY, CONNECTIVITY_LOW, CONNECTIVITY_HIGH
 from ._flip import Flip
 from ._gaussian_blur import GaussianBlur
 from ._hsl_grayscale import HSLGrayScale

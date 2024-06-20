@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.0.3 (????-??-??)
+------------------
+
+- added `find-contours` filter for turning blobs in image segmentation annotations into object detection polygons.
+
+
 0.0.2 (2024-06-13)
 ------------------
 
