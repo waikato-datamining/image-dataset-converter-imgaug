@@ -32,7 +32,7 @@ setup(
     packages=find_namespace_packages(where='src'),
     install_requires=[
         "image-dataset-converter",
-        "imgaug>=0.4.0",
+        "imgaug3",
         "matplotlib",
         "Shapely",
         "simple-mask-utils==0.0.1"
