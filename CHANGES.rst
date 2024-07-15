@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.0.4 (????-??-??)
+0.0.4 (2024-07-16)
 ------------------
 
 - switched from unmaintained imgaug to imgaug3 library (https://github.com/nsetzer/imgaug)
