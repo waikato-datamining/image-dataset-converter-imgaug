@@ -1,14 +1,13 @@
 import argparse
-import cv2
-import io
-import numpy as np
 from random import Random
 from typing import List
 
-from PIL import Image
-from ._base_image_augmentation import BaseFilter, IMGAUG_MODE_REPLACE
+import cv2
+import numpy as np
 from wai.logging import LOGGING_WARNING
-from idc.api import ImageData, ImageClassificationData, ObjectDetectionData, ImageSegmentationData
+
+from idc.api import ImageData, ImageClassificationData, ObjectDetectionData, ImageSegmentationData, array_to_image
+from ._base_image_augmentation import BaseFilter, IMGAUG_MODE_REPLACE
 
 
 class HSLGrayScale(BaseFilter):
@@ -159,9 +158,7 @@ class HSLGrayScale(BaseFilter):
             img_l = img_l.astype(np.uint8)
 
         # convert back to PIL bytes
-        img_pil = Image.fromarray(np.uint8(img_l))
-        img_pil_bytes = io.BytesIO()
-        img_pil.save(img_pil_bytes, format=item.image_format)
+        _, img_pil_bytes = array_to_image(img_l, item.image_format)
         result = type(item)(image_name=image_name, data=img_pil_bytes.getvalue(),
                             image_format=item.image_format,
                             metadata=item.get_metadata(), annotation=item.annotation)

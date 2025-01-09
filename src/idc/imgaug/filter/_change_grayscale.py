@@ -7,7 +7,7 @@ from PIL import Image
 from seppl.io import Filter
 from wai.logging import LOGGING_WARNING
 
-from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, flatten_list, make_list
+from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, flatten_list, make_list, array_to_image
 
 
 class ChangeGrayscale(Filter):
@@ -117,9 +117,7 @@ class ChangeGrayscale(Filter):
                 else:
                     img_gray = img_gray + self.increment
                 img_gray = np.clip(img_gray, 0, 255).astype(np.uint8)
-                img_pil = Image.fromarray(np.uint8(img_gray))
-                img_pil_bytes = io.BytesIO()
-                img_pil.save(img_pil_bytes, format=item.image_format)
+                _, img_pil_bytes = array_to_image(img_gray, item.image_format)
                 item_new = type(item)(image_name=item.image_name, data=img_pil_bytes.getvalue(),
                                       metadata=item.get_metadata(), annotation=item.annotation)
                 result.append(item_new)

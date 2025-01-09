@@ -1,5 +1,4 @@
 import argparse
-import io
 import logging
 import os.path
 import re
@@ -7,13 +6,12 @@ import sys
 import traceback
 from typing import List, Dict, Tuple
 
-from PIL import Image
 from seppl import Initializable, init_initializable, Session
 from seppl.io import locate_files, StreamWriter, BatchWriter, Writer
 from wai.common.adams.imaging.locateobjects import LocatedObject
 from wai.logging import init_logging, set_logging_level, add_logging_level
 
-from idc.api import ImageData, parse_reader, parse_writer, Reader, ObjectDetectionData, merge_polygons
+from idc.api import ImageData, parse_reader, parse_writer, Reader, ObjectDetectionData, merge_polygons, empty_image
 from idc.core import ENV_IDC_LOGLEVEL
 from idc.imgaug.filter import new_from_template, transfer_region
 
@@ -129,9 +127,7 @@ def merge_images(input_images: List[ImageData], coordinates: [List[Tuple[int, in
     :return: the combined image/annotations
     :rtype: ImageData
     """
-    full_img = Image.new("RGB", (width, height))
-    img_bytes = io.BytesIO()
-    full_img.save(img_bytes, format=input_images[0].image_format)
+    _, img_bytes = empty_image("RGB", width, height, input_images[0].image_format)
     data = img_bytes.getvalue()
 
     cls = type(input_images[0])

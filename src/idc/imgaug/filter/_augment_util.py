@@ -1,8 +1,4 @@
-import io
-
 import imageio.v2 as imageio
-import numpy as np
-from PIL import Image
 from imgaug.augmentables.bbs import BoundingBox, BoundingBoxesOnImage
 from imgaug.augmentables.polys import Polygon, PolygonsOnImage
 from imgaug.augmentables.segmaps import SegmentationMapsOnImage
@@ -10,7 +6,7 @@ from wai.common.adams.imaging.locateobjects import LocatedObjects, absolute_to_n
 from wai.common.geometry import Point as WaiPoint
 from wai.common.geometry import Polygon as WaiPolygon
 
-from idc.api import ImageData, ObjectDetectionData, ImageSegmentationData, combine_layers, split_layers
+from idc.api import ImageData, ObjectDetectionData, ImageSegmentationData, combine_layers, split_layers, array_to_image
 
 
 def augment_image(item: ImageData, pipeline, image_name: str = None) -> ImageData:
@@ -133,9 +129,7 @@ def augment_image(item: ImageData, pipeline, image_name: str = None) -> ImageDat
     if (objs_aug is not None) and normalized:
         annotation_new = absolute_to_normalized(annotation_new, item.image_width, item.image_height)
 
-    img_new = Image.fromarray(np.uint8(image_aug))
-    img_new_bytes = io.BytesIO()
-    img_new.save(img_new_bytes, format=item.image_format)
+    _, img_new_bytes = array_to_image(image_aug, item.image_format)
 
     result = type(item)(image_name=image_name, data=img_new_bytes.getvalue(),
                         image_format=item.image_format,

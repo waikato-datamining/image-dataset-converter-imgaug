@@ -5,6 +5,7 @@ Changelog
 ------------------
 
 - switched to underscores in project name
+- switched to new methods from idc.api: `empty_image(...)` and `arary_to_image(...)`
 
 
 0.0.4 (2024-07-16)

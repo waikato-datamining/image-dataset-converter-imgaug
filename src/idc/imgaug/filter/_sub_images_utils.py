@@ -1,15 +1,23 @@
-import io
 import logging
 import os
 from typing import List, Tuple, Optional
 
 import numpy as np
-from PIL import Image
 from wai.common.adams.imaging.locateobjects import LocatedObject, LocatedObjects
 from wai.common.geometry import Point as WaiPoint, Polygon as WaiPolygon
 
 from idc.api import ImageSegmentationAnnotations, ImageClassificationData, ImageSegmentationData, ObjectDetectionData, \
-    ImageData, crop_image, pad_image, fit_layers, fit_located_object
+    ImageData, crop_image, pad_image, fit_layers, fit_located_object, array_to_image, empty_image
+import logging
+import os
+from typing import List, Tuple, Optional
+
+import numpy as np
+from wai.common.adams.imaging.locateobjects import LocatedObject, LocatedObjects
+from wai.common.geometry import Point as WaiPoint, Polygon as WaiPolygon
+
+from idc.api import ImageSegmentationAnnotations, ImageClassificationData, ImageSegmentationData, ObjectDetectionData, \
+    ImageData, crop_image, pad_image, fit_layers, fit_located_object, array_to_image, empty_image
 
 REGION_SORTING_NONE = "none"
 REGION_SORTING_XY = "x-then-y"
@@ -162,8 +170,7 @@ def process_image(item: ImageData, regions_lobj: List[LocatedObject], regions_xy
         sub_image = pil.crop((x0, y0, x1+1, y1+1))
         orig_dims = LocatedObject(0, 0, sub_image.size[0], sub_image.size[1])
         sub_image = pad_image(sub_image, pad_width=pad_width, pad_height=pad_height)
-        sub_bytes = io.BytesIO()
-        sub_image.save(sub_bytes, format=item.image_format)
+        _, sub_bytes = array_to_image(sub_image, item.image_format)
         image_name_new = region_filename(item.image_name, regions_lobj, regions_xyxy, region_index, suffix)
 
         # crop annotations and forward
@@ -214,9 +221,7 @@ def new_from_template(item, rebuild_image: bool = False):
     :return: the new container
     """
     if rebuild_image:
-        img = Image.new(item.image.mode, item.image_size)
-        img_bytes = io.BytesIO()
-        img.save(img_bytes, format=item.image_format)
+        _, img_bytes = empty_image(item.image.mode, item.image_width, item.image_height, item.image_format)
         data = img_bytes.getvalue()
     else:
         data = item.image_bytes
