@@ -7,7 +7,7 @@ Image augmentation extension for the [image-dataset-converter](https://github.co
 Via PyPI:
 
 ```bash
-pip install image-dataset-converter-imgaug
+pip install image_dataset_converter_imgaug
 ```
 
 The latest code straight from the repository:
