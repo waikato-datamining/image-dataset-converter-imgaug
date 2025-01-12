@@ -31,13 +31,13 @@ setup(
     },
     packages=find_namespace_packages(where='src'),
     install_requires=[
-        "image_dataset_converter",
+        "image_dataset_converter>=0.0.5",
         "imgaug3",
         "matplotlib",
         "Shapely",
         "simple-mask-utils==0.0.1"
     ],
-    version="0.0.5",
+    version="0.0.6",
     author='Peter Reutemann',
     author_email='fracpete@waikato.ac.nz',
     entry_points={
