@@ -23,7 +23,9 @@ class Region:
 
 def generate(width: int, height: int,
              num_rows: int = None, num_cols: int = None, fixed_size: bool = False,
-             row_height: int = None, col_width: int = None, partial: bool = False) -> List[Region]:
+             row_height: int = None, col_width: int = None, margin: int = 0,
+             margin_left: int = 0, margin_top: int = 0, margin_right: int = 0, margin_bottom: int = 0,
+             partial: bool = False) -> List[Region]:
     """
     Generates the regions and returns them. Either specify num_rows/num_cols or row_height/col_width.
 
@@ -41,17 +43,55 @@ def generate(width: int, height: int,
     :type row_height: int
     :param col_width: the width of columns
     :type col_width: int
+    :param margin: the margin around the actual section to generate the regions from
+    :type margin: int
+    :param margin_left: the left margin of the actual section to generate the regions from
+    :type margin_left: int
+    :param margin_top: the top margin of the actual section to generate the regions from
+    :type margin_top: int
+    :param margin_right: the right margin of the actual section to generate the regions from
+    :type margin_right: int
+    :param margin_bottom: the bottom margin of the actual section to generate the regions from
+    :type margin_bottom: int
     :param partial: whether to return partial regions right/bottom when using fixed row height/col width
     :type partial: bool
     """
     result = []
 
+    # image dimensions
     if width < 1:
         raise ValueError("Image width must be at least 1!")
     _logger.info("width: %d" % width)
     if height < 1:
         raise ValueError("Image height must be at least 1!")
     _logger.info("height: %d" % height)
+
+    # margins
+    if margin > 0:
+        if margin_left == 0:
+            margin_left = margin
+        if margin_top == 0:
+            margin_top = margin
+        if margin_right == 0:
+            margin_right = margin
+        if margin_bottom == 0:
+            margin_bottom = margin
+    if margin_left > 0:
+        _logger.info("margin (left): %d" % margin_left)
+    if margin_top > 0:
+        _logger.info("margin (top): %d" % margin_top)
+    if margin_right > 0:
+        _logger.info("margin (right): %d" % margin_right)
+    if margin_bottom > 0:
+        _logger.info("margin (bottom): %d" % margin_bottom)
+
+    # section
+    section_width = width - margin_left - margin_right
+    if section_width < width:
+        _logger.info("section width: %d" % section_width)
+    section_height = height - margin_top - margin_bottom
+    if section_height < height:
+        _logger.info("section height: %d" % section_height)
 
     mode = None
     if (num_rows is not None) and (num_cols is not None):
@@ -67,17 +107,17 @@ def generate(width: int, height: int,
         _logger.info("#cols: %d" % num_cols)
         _logger.info("fixed width/height: %s" % str(fixed_size))
         for row in range(num_rows):
-            y = row * height // num_rows
+            y = row * section_height // num_rows + margin_top
             if (row == num_rows - 1) and not fixed_size:
-                h = height - y
+                h = section_height - y
             else:
-                h = height // num_rows
+                h = section_height // num_rows
             for col in range(num_cols):
-                x = col * width // num_cols
+                x = col * section_width // num_cols + margin_left
                 if (col == num_cols - 1) and not fixed_size:
-                    w = width - x
+                    w = section_width - x
                 else:
-                    w = width // num_cols
+                    w = section_width // num_cols
                 result.append(Region(x=x, y=y, w=w, h=h))
 
     # fixed row/col size
@@ -85,9 +125,9 @@ def generate(width: int, height: int,
         _logger.info("#row-height: %d" % row_height)
         _logger.info("#col-width: %d" % col_width)
         _logger.info("partial: %s" % str(partial))
-        y = 0
+        y = margin_top
         while True:
-            x = 0
+            x = margin_left
             h = row_height
             if y + h - 1 > height:
                 if partial:
@@ -160,6 +200,11 @@ def main(args=None):
     parser.add_argument("-c", "--num_cols", type=int, help="The number of columns.", default=None, required=False)
     parser.add_argument("-R", "--row_height", type=int, help="The height of rows.", default=None, required=False)
     parser.add_argument("-C", "--col_width", type=int, help="The width of columns.", default=None, required=False)
+    parser.add_argument("-m", "--margin", type=int, help="The margin around the actual section to generate the regions from.", default=0, required=False)
+    parser.add_argument("--margin_left", type=int, help="The left margin for the actual section to generate the regions from.", default=0, required=False)
+    parser.add_argument("--margin_top", type=int, help="The top margin for the actual section to generate the regions from.", default=0, required=False)
+    parser.add_argument("--margin_right", type=int, help="The right margin for the actual section to generate the regions from.", default=0, required=False)
+    parser.add_argument("--margin_bottom", type=int, help="The bottom margin for the actual section to generate the regions from.", default=0, required=False)
     parser.add_argument("-f", "--fixed_size", action="store_true", help="Whether to use fixed row height/col width, omitting any left-over bits at right/bottom, when using num_rows/num_cols", required=False)
     parser.add_argument("-p", "--partial", action="store_true", help="Whether to output partial regions, the left-over bits at right/bottom, when using row_height/col_width", required=False)
     parser.add_argument("-1", "--one_based", action="store_true", help="Whether to use 1-based coordinates", required=False)
@@ -168,7 +213,10 @@ def main(args=None):
     set_logging_level(_logger, parsed.logging_level)
     regions = generate(parsed.width, parsed.height,
                        num_rows=parsed.num_rows, num_cols=parsed.num_cols, fixed_size=parsed.fixed_size,
-                       row_height=parsed.row_height, col_width=parsed.col_width, partial=parsed.partial)
+                       row_height=parsed.row_height, col_width=parsed.col_width, margin=parsed.margin,
+                       margin_left=parsed.margin_left, margin_top=parsed.margin_top,
+                       margin_right=parsed.margin_right, margin_bottom=parsed.margin_bottom,
+                       partial=parsed.partial)
     print(regions_to_string(regions, one_based=parsed.one_based))
 
 

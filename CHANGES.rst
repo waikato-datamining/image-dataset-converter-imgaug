@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.0.7 (????-??-??)
+------------------
+
+- `idc-generate-regions` tool can take margins into account for its region calculations now
+
+
 0.0.6 (2025-01-13)
 ------------------
 
