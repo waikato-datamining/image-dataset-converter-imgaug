@@ -13,7 +13,7 @@ from wai.logging import init_logging, set_logging_level, add_logging_level
 
 from idc.api import ImageData, parse_reader, parse_writer, Reader, ObjectDetectionData, merge_polygons, empty_image
 from idc.core import ENV_IDC_LOGLEVEL
-from idc.imgaug.filter import new_from_template, transfer_region
+from idc.imgaug.filter import new_from_template, transfer_region, prune_annotations
 
 COMBINE_SUB_IMAGES = "idc-combine-sub-images"
 
@@ -215,6 +215,7 @@ def combine(input_files: List[str], group: str, x: str, y: str, width: int, heig
         gcoords = extract_coordinates(gfiles, x, y, one_based)
         image_name = group_id + "." + gimages[0].image_format.lower().replace("jpeg", "jpg")
         combined = merge_images(gimages, gcoords, width, height, image_name)
+        prune_annotations(combined)
         if merge_adjacent_polygons and isinstance(combined, ObjectDetectionData):
             combined = merge_polygons(combined)
         write_image(combined, writer)
