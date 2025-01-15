@@ -5,6 +5,7 @@ Changelog
 ------------------
 
 - `idc-generate-regions` tool can take margins into account for its region calculations now
+- `idc-combine-sub-images` tool now has more details in the exceptions when extraction of groups fail
 
 
 0.0.6 (2025-01-13)

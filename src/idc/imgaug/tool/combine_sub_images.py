@@ -36,7 +36,7 @@ def group_files(input_files: List[str], regexp: str) -> Dict[str, List[str]]:
         input_name = os.path.basename(input_file)
         m = re.search(regexp, input_name)
         if m is None:
-            raise Exception("Failed to extract 1st group from: %s" % input_name)
+            raise Exception("Failed to extract 1st group from '%s' using '%s'" % (input_name, regexp))
         group_id = m.group(1)
         if group_id not in result:
             result[group_id] = []
@@ -58,7 +58,7 @@ def extract_coordinate(input_file: str, regexp: str) -> int:
     input_name = os.path.basename(input_file)
     m = re.search(regexp, input_name)
     if m is None:
-        raise Exception("Failed to extract coordinate (1st group) from: %s" % input_name)
+        raise Exception("Failed to extract 1st group from '%s' using '%s'" % (input_name, regexp))
     coordinate = m.group(1)
     return int(coordinate)
 
