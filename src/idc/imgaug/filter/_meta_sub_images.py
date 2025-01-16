@@ -197,7 +197,7 @@ class MetaSubImages(Filter):
                                     crop_width=orig_dims.width, crop_height=orig_dims.height)
                 prune_annotations(new_item)
                 if not new_item.has_annotation():
-                    self.logger().info("No annotations attached")
+                    self.logger().warning("No annotations attached")
                 if self.merge_adjacent_polygons and isinstance(new_item, ObjectDetectionData):
                     new_item = merge_polygons(new_item)
                 result.append(new_item)
