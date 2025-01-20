@@ -9,6 +9,8 @@ Changelog
   and prunes the annotation after the merge as well
 - `meta-sub-images` now outputs a logging message if there are no annotations after transferring
   regions/pruning annotations
+- method `transfer_region` now adds the sub-images rather than replacing the tile in the overall layer,
+  to allow for overlaps (for reducing edge effects)
 
 
 0.0.6 (2025-01-13)

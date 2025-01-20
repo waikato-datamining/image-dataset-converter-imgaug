@@ -321,7 +321,8 @@ def transfer_region(full_image, sub_image, region: LocatedObject, rebuild_image:
                     full_image.new_layer(label)
                 layer = sub_image.annotation.layers[label]
                 layer = crop_image(layer, crop_width=crop_width, crop_height=crop_height)
-                full_image.annotation.layers[label][y:y + h, x:x + w] = layer
+                full_image.annotation.layers[label][y:y + h, x:x + w] += layer
+                full_image.annotation.layers[label] = np.clip(full_image.annotation.layers[label], 0, 1)
 
         # unknown
         else:
