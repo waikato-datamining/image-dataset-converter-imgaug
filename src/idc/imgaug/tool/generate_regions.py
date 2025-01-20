@@ -122,13 +122,17 @@ def generate(width: int, height: int,
             if (row == num_rows - 1) and not fixed_size:
                 h = section_height - y
             else:
-                h = section_height // num_rows + overlap_bottom
+                h = section_height // num_rows
+            if row < num_rows - 1:
+                h += overlap_bottom
             for col in range(num_cols):
                 x = col * section_width // num_cols + margin_left
                 if (col == num_cols - 1) and not fixed_size:
                     w = section_width - x
                 else:
-                    w = section_width // num_cols + overlap_right
+                    w = section_width // num_cols
+                if col < num_cols - 1:
+                    w += overlap_right
                 result.append(Region(x=x, y=y, w=w, h=h))
 
     # fixed row/col size
