@@ -24,6 +24,7 @@ class Region:
 def generate(width: int, height: int,
              num_rows: int = None, num_cols: int = None, fixed_size: bool = False,
              row_height: int = None, col_width: int = None, margin: int = 0,
+             overlap_right: int = 0, overlap_bottom: int = 0,
              margin_left: int = 0, margin_top: int = 0, margin_right: int = 0, margin_bottom: int = 0,
              partial: bool = False) -> List[Region]:
     """
@@ -43,6 +44,10 @@ def generate(width: int, height: int,
     :type row_height: int
     :param col_width: the width of columns
     :type col_width: int
+    :param overlap_right: the overlap in pixels between two images (on the right)
+    :type overlap_right: int
+    :param overlap_bottom: the overlap in pixels between two images (on the bottom)
+    :type overlap_bottom: int
     :param margin: the margin around the actual section to generate the regions from
     :type margin: int
     :param margin_left: the left margin of the actual section to generate the regions from
@@ -85,6 +90,12 @@ def generate(width: int, height: int,
     if margin_bottom > 0:
         _logger.info("margin (bottom): %d" % margin_bottom)
 
+    # overlaps
+    if overlap_right > 0:
+        _logger.info("overlap (right): %d" % overlap_right)
+    if overlap_bottom > 0:
+        _logger.info("overlap (bottom): %d" % overlap_bottom)
+
     # section
     section_width = width - margin_left - margin_right
     if section_width < width:
@@ -111,13 +122,13 @@ def generate(width: int, height: int,
             if (row == num_rows - 1) and not fixed_size:
                 h = section_height - y
             else:
-                h = section_height // num_rows
+                h = section_height // num_rows + overlap_bottom
             for col in range(num_cols):
                 x = col * section_width // num_cols + margin_left
                 if (col == num_cols - 1) and not fixed_size:
                     w = section_width - x
                 else:
-                    w = section_width // num_cols
+                    w = section_width // num_cols + overlap_right
                 result.append(Region(x=x, y=y, w=w, h=h))
 
     # fixed row/col size
@@ -128,7 +139,7 @@ def generate(width: int, height: int,
         y = margin_top
         while True:
             x = margin_left
-            h = row_height
+            h = row_height + overlap_bottom
             if y + h - 1 > height:
                 if partial:
                     h = height - y
@@ -136,7 +147,7 @@ def generate(width: int, height: int,
                     h = 0
 
             while True:
-                w = col_width
+                w = col_width + overlap_right
                 if x + w - 1 > width:
                     if partial:
                         w = width - x
@@ -200,6 +211,8 @@ def main(args=None):
     parser.add_argument("-c", "--num_cols", type=int, help="The number of columns.", default=None, required=False)
     parser.add_argument("-R", "--row_height", type=int, help="The height of rows.", default=None, required=False)
     parser.add_argument("-C", "--col_width", type=int, help="The width of columns.", default=None, required=False)
+    parser.add_argument("--overlap_right", type=int, help="The overlap between two images (on the right of the left-most image).", default=0, required=False)
+    parser.add_argument("--overlap_bottom", type=int, help="The overlap between two images (on the bottom of the top-most image).", default=0, required=False)
     parser.add_argument("-m", "--margin", type=int, help="The margin around the actual section to generate the regions from.", default=0, required=False)
     parser.add_argument("--margin_left", type=int, help="The left margin for the actual section to generate the regions from.", default=0, required=False)
     parser.add_argument("--margin_top", type=int, help="The top margin for the actual section to generate the regions from.", default=0, required=False)
@@ -214,6 +227,7 @@ def main(args=None):
     regions = generate(parsed.width, parsed.height,
                        num_rows=parsed.num_rows, num_cols=parsed.num_cols, fixed_size=parsed.fixed_size,
                        row_height=parsed.row_height, col_width=parsed.col_width, margin=parsed.margin,
+                       overlap_right=parsed.overlap_right, overlap_bottom=parsed.overlap_bottom,
                        margin_left=parsed.margin_left, margin_top=parsed.margin_top,
                        margin_right=parsed.margin_right, margin_bottom=parsed.margin_bottom,
                        partial=parsed.partial)

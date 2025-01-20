@@ -22,14 +22,20 @@ pip install git+https://github.com/waikato-datamining/image-dataset-converter-im
 
 ```
 usage: idc-generate-regions [-h] -W WIDTH -H HEIGHT [-r NUM_ROWS]
-                            [-c NUM_COLS] [-R ROW_HEIGHT] [-C COL_WIDTH] [-f]
-                            [-p] [-1] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
+                            [-c NUM_COLS] [-R ROW_HEIGHT] [-C COL_WIDTH]
+                            [--overlap_right OVERLAP_RIGHT]
+                            [--overlap_bottom OVERLAP_BOTTOM] [-m MARGIN]
+                            [--margin_left MARGIN_LEFT]
+                            [--margin_top MARGIN_TOP]
+                            [--margin_right MARGIN_RIGHT]
+                            [--margin_bottom MARGIN_BOTTOM] [-f] [-p] [-1]
+                            [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
 
 Tool turns an image size into regions to be used, e.g., with the 'sub-images'
 filter. Either specify the number of rows/cols or the height/width of
 rows/cols.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -W WIDTH, --width WIDTH
                         The width of the image. (default: None)
@@ -43,6 +49,27 @@ optional arguments:
                         The height of rows. (default: None)
   -C COL_WIDTH, --col_width COL_WIDTH
                         The width of columns. (default: None)
+  --overlap_right OVERLAP_RIGHT
+                        The overlap between two images (on the right of the
+                        left-most image). (default: 0)
+  --overlap_bottom OVERLAP_BOTTOM
+                        The overlap between two images (on the bottom of the
+                        top-most image). (default: 0)
+  -m MARGIN, --margin MARGIN
+                        The margin around the actual section to generate the
+                        regions from. (default: 0)
+  --margin_left MARGIN_LEFT
+                        The left margin for the actual section to generate the
+                        regions from. (default: 0)
+  --margin_top MARGIN_TOP
+                        The top margin for the actual section to generate the
+                        regions from. (default: 0)
+  --margin_right MARGIN_RIGHT
+                        The right margin for the actual section to generate
+                        the regions from. (default: 0)
+  --margin_bottom MARGIN_BOTTOM
+                        The bottom margin for the actual section to generate
+                        the regions from. (default: 0)
   -f, --fixed_size      Whether to use fixed row height/col width, omitting
                         any left-over bits at right/bottom, when using
                         num_rows/num_cols (default: False)
