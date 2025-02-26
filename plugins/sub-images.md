@@ -15,7 +15,7 @@ Extracts sub-images (incl their annotations) from the images coming through,
 using the defined regions. When using x/y in the suffix, these images can be
 reassembled using the 'idc-combine-sub-images' tool.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -l {DEBUG,INFO,WARNING,ERROR,CRITICAL}, --logging_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}
                         The logging level to use. (default: WARN)

@@ -13,7 +13,7 @@ Resizes all images according to the specified width/height. When only resizing
 one dimension, use 'keep-aspect-ratio' for the other one to keep the aspect
 ratio intact.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -l {DEBUG,INFO,WARNING,ERROR,CRITICAL}, --logging_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}
                         The logging level to use. (default: WARN)

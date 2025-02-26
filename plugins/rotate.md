@@ -14,7 +14,7 @@ Rotates images randomly within a range of degrees or by a specified degree.
 Specify seed value and force augmentation to be seeded to generate repeatable
 augmentations.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -l {DEBUG,INFO,WARNING,ERROR,CRITICAL}, --logging_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}
                         The logging level to use. (default: WARN)

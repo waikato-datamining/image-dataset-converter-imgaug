@@ -13,7 +13,7 @@ usage: gaussian-blur [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
 
 Applies gaussian blur to images.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -l {DEBUG,INFO,WARNING,ERROR,CRITICAL}, --logging_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}
                         The logging level to use. (default: WARN)

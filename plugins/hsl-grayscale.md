@@ -15,7 +15,7 @@ Turns RGB images into fake grayscale ones by converting them to HSL and then
 using the L channel for all channels. The brightness can be influenced and
 varied even.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -l {DEBUG,INFO,WARNING,ERROR,CRITICAL}, --logging_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}
                         The logging level to use. (default: WARN)

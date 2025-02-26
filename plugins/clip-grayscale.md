@@ -13,7 +13,7 @@ usage: clip-grayscale [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
 Changes the grayscale values that fall below the minimum or go above the
 maximum to the specified replacement values.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -l {DEBUG,INFO,WARNING,ERROR,CRITICAL}, --logging_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}
                         The logging level to use. (default: WARN)
