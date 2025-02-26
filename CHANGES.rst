@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.0.7 (????-??-??)
+0.0.7 (2025-02-26)
 ------------------
 
 - `idc-generate-regions` tool can take margins and overlaps (right/bottom) into account for its region calculations now
