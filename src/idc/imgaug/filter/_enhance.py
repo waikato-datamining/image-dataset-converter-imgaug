@@ -1,10 +1,7 @@
 import argparse
-import io
-import numpy as np
 from random import Random
 from typing import List
 
-from PIL import Image
 from PIL import ImageEnhance
 from ._base_image_augmentation import BaseFilter, IMGAUG_MODE_REPLACE
 from wai.logging import LOGGING_WARNING
