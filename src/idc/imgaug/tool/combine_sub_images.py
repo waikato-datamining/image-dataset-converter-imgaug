@@ -8,10 +8,10 @@ from typing import List, Dict, Tuple
 
 from seppl import Initializable, init_initializable, Session
 from seppl.io import locate_files, StreamWriter, BatchWriter, Writer
+from seppl.placeholders import placeholder_list
 from wai.common.adams.imaging.locateobjects import LocatedObject
 from wai.logging import init_logging, set_logging_level, add_logging_level
 
-from seppl import placeholder_list
 from idc.api import ImageData, parse_reader, parse_writer, Reader, ObjectDetectionData, merge_polygons, empty_image
 from idc.core import ENV_IDC_LOGLEVEL
 from idc.imgaug.filter import new_from_template, transfer_region, prune_annotations
