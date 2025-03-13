@@ -8,16 +8,6 @@ from wai.common.geometry import Point as WaiPoint, Polygon as WaiPolygon
 
 from idc.api import ImageSegmentationAnnotations, ImageClassificationData, ImageSegmentationData, ObjectDetectionData, \
     ImageData, crop_image, pad_image, fit_layers, fit_located_object, array_to_image, empty_image
-import logging
-import os
-from typing import List, Tuple, Optional
-
-import numpy as np
-from wai.common.adams.imaging.locateobjects import LocatedObject, LocatedObjects
-from wai.common.geometry import Point as WaiPoint, Polygon as WaiPolygon
-
-from idc.api import ImageSegmentationAnnotations, ImageClassificationData, ImageSegmentationData, ObjectDetectionData, \
-    ImageData, crop_image, pad_image, fit_layers, fit_located_object, array_to_image, empty_image
 
 REGION_SORTING_NONE = "none"
 REGION_SORTING_XY = "x-then-y"
