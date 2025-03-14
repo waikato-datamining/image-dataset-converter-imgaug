@@ -37,7 +37,7 @@ setup(
         "Shapely",
         "simple-mask-utils==0.0.1"
     ],
-    version="0.0.7",
+    version="0.0.8",
     author='Peter Reutemann',
     author_email='fracpete@waikato.ac.nz',
     entry_points={

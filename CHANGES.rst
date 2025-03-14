@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.0.8 (????-??-??)
+0.0.8 (2025-03-14)
 ------------------
 
 - added support for placeholers: `idc-combine-sub-images`
