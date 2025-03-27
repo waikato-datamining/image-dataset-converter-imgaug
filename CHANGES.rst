@@ -6,6 +6,7 @@ Changelog
 
 - fixed `idc.imgaug.filter.transfer_region` method: image segmentation layers now use values (0,255)
 - using underscores now instead of dashes in dependencies (`setup.py`)
+- renamed `idc.imgaug.filter._sub_images_utils.process_image` to `extract_regions`
 
 
 0.0.8 (2025-03-14)
