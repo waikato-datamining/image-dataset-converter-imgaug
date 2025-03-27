@@ -8,7 +8,8 @@ from wai.logging import LOGGING_WARNING
 from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, flatten_list, make_list, \
     parse_filter, merge_polygons
 from idc.imgaug.filter._sub_images_utils import REGION_SORTING_NONE, REGION_SORTING, PLACEHOLDERS, DEFAULT_SUFFIX, \
-    parse_regions, extract_regions, new_from_template, transfer_region, prune_annotations
+    parse_regions, extract_regions, generate_regions, regions_to_string, new_from_template, transfer_region, \
+    prune_annotations
 
 
 class MetaSubImages(Filter):
@@ -18,6 +19,7 @@ class MetaSubImages(Filter):
     """
 
     def __init__(self, regions: List[str] = None, region_sorting: str = REGION_SORTING_NONE,
+                 num_rows: int = None, num_cols: int = None, overlap_right: int = None, overlap_bottom: int = None,
                  include_partial: bool = False, suppress_empty: bool = False, suffix: str = DEFAULT_SUFFIX,
                  base_filter: str = None, rebuild_image: bool = False, merge_adjacent_polygons: bool = False,
                  pad_width: int = None, pad_height: int = None,
@@ -29,6 +31,10 @@ class MetaSubImages(Filter):
         :type regions: list
         :param region_sorting: how to sort the supplied region definitions
         :type region_sorting: str
+        :param num_rows: the number of rows to use, if no regions defined
+        :type num_rows: int
+        :param num_cols: the number of columns to use, if no regions defined
+        :type num_cols: int
         :param include_partial: whether to include only annotations that fit fully into a region or also partial ones
         :type include_partial: bool
         :param suppress_empty: suppresses sub-images that have no annotations (object detection)
@@ -53,6 +59,10 @@ class MetaSubImages(Filter):
         super().__init__(logger_name=logger_name, logging_level=logging_level)
         self.regions = regions
         self.region_sorting = region_sorting
+        self.num_rows = num_rows
+        self.num_cols = num_cols
+        self.overlap_right = overlap_right
+        self.overlap_bottom = overlap_bottom
         self.include_partial = include_partial
         self.suppress_empty = suppress_empty
         self.suffix = suffix
@@ -81,7 +91,7 @@ class MetaSubImages(Filter):
         :return: the description
         :rtype: str
         """
-        return "Extracts sub-images (incl their annotations) from the images coming through, using the defined regions, and passes them through the base filter before reassembling them again."
+        return "Extracts sub-images (incl their annotations) from the images coming through, using the defined regions or #rows/cols, and passes them through the base filter before reassembling them again."
 
     def accepts(self) -> List:
         """
@@ -110,6 +120,10 @@ class MetaSubImages(Filter):
         """
         parser = super()._create_argparser()
         parser.add_argument("-r", "--regions", type=str, default=None, help="The regions (X,Y,WIDTH,HEIGHT) to crop and forward with their annotations (0-based coordinates)", required=True, nargs="+")
+        parser.add_argument("--num_rows", type=int, help="The number of rows, if no regions defined.", default=None, required=False)
+        parser.add_argument("--num_cols", type=int, help="The number of columns, if no regions defined.", default=None, required=False)
+        parser.add_argument("--overlap_right", type=int, help="The overlap between two images (on the right of the left-most image), if no regions defined.", default=0, required=False)
+        parser.add_argument("--overlap_bottom", type=int, help="The overlap between two images (on the bottom of the top-most image), if no regions defined.", default=0, required=False)
         parser.add_argument("-s", "--region_sorting", choices=REGION_SORTING, default=REGION_SORTING_NONE, help="How to sort the supplied region definitions", required=False)
         parser.add_argument("-p", "--include_partial", action="store_true", help="Whether to include only annotations that fit fully into a region or also partial ones", required=False)
         parser.add_argument("-e", "--suppress_empty", action="store_true", help="Suppresses sub-images that have no annotations", required=False)
@@ -131,6 +145,10 @@ class MetaSubImages(Filter):
         super()._apply_args(ns)
         self.regions = ns.regions
         self.region_sorting = ns.region_sorting
+        self.num_rows = ns.num_rows
+        self.num_cols = ns.num_cols
+        self.overlap_right = ns.overlap_right
+        self.overlap_bottom = ns.overlap_bottom
         self.include_partial = ns.include_partial
         self.suppress_empty = ns.suppress_empty
         self.suffix = ns.suffix
@@ -161,6 +179,10 @@ class MetaSubImages(Filter):
             self.rebuild_image = False
         if self.merge_adjacent_polygons is None:
             self.merge_adjacent_polygons = False
+        if self.overlap_right is None:
+            self.overlap_right = 0
+        if self.overlap_bottom is None:
+            self.overlap_bottom = 0
 
         # configure base filter
         self._base_filter = parse_filter(self.base_filter)
@@ -168,7 +190,10 @@ class MetaSubImages(Filter):
         if isinstance(self._base_filter, Initializable):
             init_initializable(self._base_filter, "filter", raise_again=True)
 
-        self._regions_lobj, self._regions_xyxy = parse_regions(self.regions, self.region_sorting, self.logger())
+        self._regions_lobj = None
+        self._regions_xyxy = None
+        if self.regions is not None:
+            self._regions_lobj, self._regions_xyxy = parse_regions(self.regions, self.region_sorting, self.logger())
 
     def _do_process(self, data):
         """
@@ -180,7 +205,17 @@ class MetaSubImages(Filter):
         result = []
 
         for item in make_list(data):
-            sub_items = extract_regions(item, self._regions_lobj, self._regions_xyxy, self.suffix,
+            if self._regions_lobj is not None:
+                regions_lobj = self._regions_lobj
+                regions_xyxy = self._regions_xyxy
+            else:
+                regions = generate_regions(item.image_width, item.image_height,
+                                           num_rows=self.num_rows, num_cols=self.num_cols,
+                                           overlap_right=self.overlap_right, overlap_bottom=self.overlap_bottom,
+                                           logger=self.logger())
+                regions_str = regions_to_string(regions, logger=self.logger())
+                regions_lobj, regions_xyxy = parse_regions(regions_str.split(" "), self.region_sorting, self.logger())
+            sub_items = extract_regions(item, regions_lobj, regions_xyxy, self.suffix,
                                         self.suppress_empty, self.include_partial, self.logger(),
                                         pad_width=self.pad_width, pad_height=self.pad_height)
             # failed to process?
