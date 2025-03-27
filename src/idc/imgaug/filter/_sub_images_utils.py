@@ -117,9 +117,9 @@ def region_filename(path: str, regions_lobj: List[LocatedObject], regions_xyxy: 
     return parts[0] + suffix + parts[1]
 
 
-def process_image(item: ImageData, regions_lobj: List[LocatedObject], regions_xyxy: List[Tuple], suffix: str,
-                  suppress_empty: bool, include_partial: bool, logger: logging.Logger,
-                  pad_width: Optional[int] = None, pad_height: Optional[int] = None) -> Optional[List[Tuple[LocatedObject, ImageData, LocatedObject]]]:
+def extract_regions(item: ImageData, regions_lobj: List[LocatedObject], regions_xyxy: List[Tuple], suffix: str,
+                    suppress_empty: bool, include_partial: bool, logger: logging.Logger,
+                    pad_width: Optional[int] = None, pad_height: Optional[int] = None) -> Optional[List[Tuple[LocatedObject, ImageData, LocatedObject]]]:
     """
     Processes the image according to the defined regions and returns a list of tuples consisting of the located
     object for the region and the new image/annotations.

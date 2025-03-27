@@ -6,7 +6,7 @@ from wai.logging import LOGGING_WARNING
 
 from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, flatten_list, make_list
 from idc.imgaug.filter._sub_images_utils import REGION_SORTING_NONE, REGION_SORTING, PLACEHOLDERS, DEFAULT_SUFFIX, \
-    parse_regions, process_image
+    parse_regions, extract_regions
 
 
 class SubImages(Filter):
@@ -151,9 +151,9 @@ class SubImages(Filter):
         result = []
 
         for item in make_list(data):
-            sub_items = process_image(item, self._regions_lobj, self._regions_xyxy, self.suffix,
-                                      self.suppress_empty, self.include_partial, self.logger(),
-                                      pad_width=self.pad_width, pad_height=self.pad_height)
+            sub_items = extract_regions(item, self._regions_lobj, self._regions_xyxy, self.suffix,
+                                        self.suppress_empty, self.include_partial, self.logger(),
+                                        pad_width=self.pad_width, pad_height=self.pad_height)
             # failed to process?
             if sub_items is None:
                 result.append(item)

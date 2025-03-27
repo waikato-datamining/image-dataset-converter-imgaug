@@ -8,7 +8,7 @@ from wai.logging import LOGGING_WARNING
 from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, flatten_list, make_list, \
     parse_filter, merge_polygons
 from idc.imgaug.filter._sub_images_utils import REGION_SORTING_NONE, REGION_SORTING, PLACEHOLDERS, DEFAULT_SUFFIX, \
-    parse_regions, process_image, new_from_template, transfer_region, prune_annotations
+    parse_regions, extract_regions, new_from_template, transfer_region, prune_annotations
 
 
 class MetaSubImages(Filter):
@@ -180,9 +180,9 @@ class MetaSubImages(Filter):
         result = []
 
         for item in make_list(data):
-            sub_items = process_image(item, self._regions_lobj, self._regions_xyxy, self.suffix,
-                                      self.suppress_empty, self.include_partial, self.logger(),
-                                      pad_width=self.pad_width, pad_height=self.pad_height)
+            sub_items = extract_regions(item, self._regions_lobj, self._regions_xyxy, self.suffix,
+                                        self.suppress_empty, self.include_partial, self.logger(),
+                                        pad_width=self.pad_width, pad_height=self.pad_height)
             # failed to process?
             if sub_items is None:
                 result.append(item)
