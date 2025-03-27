@@ -3,6 +3,7 @@
 * [change-grayscale](change-grayscale.md)
 * [clip-grayscale](clip-grayscale.md)
 * [crop](crop.md)
+* [crop-to-label](crop-to-label.md)
 * [enhance](enhance.md)
 * [find-contours](find-contours.md)
 * [flip](flip.md)
