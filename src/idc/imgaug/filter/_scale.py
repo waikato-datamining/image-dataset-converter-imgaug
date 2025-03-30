@@ -95,8 +95,8 @@ class Scale(BaseImageAugmentation):
         :rtype: argparse.ArgumentParser
         """
         parser = super()._create_argparser()
-        parser.add_argument("-f", "--from_percentage", type=float, help="The start of the percentage range to use for scaling the images.", default=None, required=False)
-        parser.add_argument("-t", "--to_percentage", type=float, help="The end of the percentage range to use for scaling the images.", default=None, required=False)
+        parser.add_argument("-f", "--from_percentage", type=float, help="The start of the percentage range to use for scaling the images (1.0 = 100%%).", default=None, required=False)
+        parser.add_argument("-t", "--to_percentage", type=float, help="The end of the percentage range to use for scaling the images (1.0 = 100%%).", default=None, required=False)
         parser.add_argument("-k", "--keep_aspect", action="store_true", help="Whether to keep the aspect ratio.", default=None, required=False)
         parser.add_argument("-u", "--update_size", action="store_true", help="Whether to update the image size after the scaling operation or use original size.", default=None, required=False)
         return parser

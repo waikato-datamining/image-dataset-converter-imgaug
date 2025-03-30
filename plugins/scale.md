@@ -37,10 +37,10 @@ options:
                         0 (= always) (default: 0.0)
   -f FROM_PERCENTAGE, --from_percentage FROM_PERCENTAGE
                         The start of the percentage range to use for scaling
-                        the images. (default: None)
+                        the images (1.0 = 100%). (default: None)
   -t TO_PERCENTAGE, --to_percentage TO_PERCENTAGE
                         The end of the percentage range to use for scaling the
-                        images. (default: None)
+                        images (1.0 = 100%). (default: None)
   -k, --keep_aspect     Whether to keep the aspect ratio. (default: None)
   -u, --update_size     Whether to update the image size after the scaling
                         operation or use original size. (default: None)
