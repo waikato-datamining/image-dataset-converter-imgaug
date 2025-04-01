@@ -8,7 +8,8 @@ Extracts sub-images (incl their annotations) from the images coming through, usi
 ```
 usage: sub-images [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
                   [-N LOGGER_NAME] [-r [REGIONS ...]] [--num_rows NUM_ROWS]
-                  [--num_cols NUM_COLS] [--overlap_right OVERLAP_RIGHT]
+                  [--num_cols NUM_COLS] [--row_height ROW_HEIGHT]
+                  [--col_width COL_WIDTH] [--overlap_right OVERLAP_RIGHT]
                   [--overlap_bottom OVERLAP_BOTTOM]
                   [-s {none,x-then-y,y-then-x}] [-p] [-e] [-S SUFFIX]
                   [--pad_width PAD_WIDTH] [--pad_height PAD_HEIGHT]
@@ -32,6 +33,10 @@ options:
                         None)
   --num_cols NUM_COLS   The number of columns, if no regions defined.
                         (default: None)
+  --row_height ROW_HEIGHT
+                        The height of rows. (default: None)
+  --col_width COL_WIDTH
+                        The width of columns. (default: None)
   --overlap_right OVERLAP_RIGHT
                         The overlap between two images (on the right of the
                         left-most image), if no regions defined. (default: 0)

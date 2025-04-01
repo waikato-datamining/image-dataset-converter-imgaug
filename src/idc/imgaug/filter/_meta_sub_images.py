@@ -19,7 +19,8 @@ class MetaSubImages(Filter):
     """
 
     def __init__(self, regions: List[str] = None, region_sorting: str = REGION_SORTING_NONE,
-                 num_rows: int = None, num_cols: int = None, overlap_right: int = None, overlap_bottom: int = None,
+                 num_rows: int = None, num_cols: int = None, row_height: int = None, col_width: int = None,
+                 overlap_right: int = None, overlap_bottom: int = None,
                  include_partial: bool = False, suppress_empty: bool = False, suffix: str = DEFAULT_SUFFIX,
                  base_filter: str = None, rebuild_image: bool = False, merge_adjacent_polygons: bool = False,
                  pad_width: int = None, pad_height: int = None,
@@ -35,6 +36,10 @@ class MetaSubImages(Filter):
         :type num_rows: int
         :param num_cols: the number of columns to use, if no regions defined
         :type num_cols: int
+        :param row_height: the height of rows
+        :type row_height: int
+        :param col_width: the width of columns
+        :type col_width: int
         :param include_partial: whether to include only annotations that fit fully into a region or also partial ones
         :type include_partial: bool
         :param suppress_empty: suppresses sub-images that have no annotations (object detection)
@@ -61,6 +66,8 @@ class MetaSubImages(Filter):
         self.region_sorting = region_sorting
         self.num_rows = num_rows
         self.num_cols = num_cols
+        self.row_height = row_height
+        self.col_width = col_width
         self.overlap_right = overlap_right
         self.overlap_bottom = overlap_bottom
         self.include_partial = include_partial
@@ -122,6 +129,8 @@ class MetaSubImages(Filter):
         parser.add_argument("-r", "--regions", type=str, default=None, help="The regions (X,Y,WIDTH,HEIGHT) to crop and forward with their annotations (0-based coordinates)", required=False, nargs="*")
         parser.add_argument("--num_rows", type=int, help="The number of rows, if no regions defined.", default=None, required=False)
         parser.add_argument("--num_cols", type=int, help="The number of columns, if no regions defined.", default=None, required=False)
+        parser.add_argument("--row_height", type=int, help="The height of rows.", default=None, required=False)
+        parser.add_argument("--col_width", type=int, help="The width of columns.", default=None, required=False)
         parser.add_argument("--overlap_right", type=int, help="The overlap between two images (on the right of the left-most image), if no regions defined.", default=0, required=False)
         parser.add_argument("--overlap_bottom", type=int, help="The overlap between two images (on the bottom of the top-most image), if no regions defined.", default=0, required=False)
         parser.add_argument("-s", "--region_sorting", choices=REGION_SORTING, default=REGION_SORTING_NONE, help="How to sort the supplied region definitions", required=False)
@@ -147,6 +156,8 @@ class MetaSubImages(Filter):
         self.region_sorting = ns.region_sorting
         self.num_rows = ns.num_rows
         self.num_cols = ns.num_cols
+        self.row_height = ns.row_height
+        self.col_width = ns.col_width
         self.overlap_right = ns.overlap_right
         self.overlap_bottom = ns.overlap_bottom
         self.include_partial = ns.include_partial
@@ -167,6 +178,14 @@ class MetaSubImages(Filter):
 
         if (self.regions is not None) and (len(self.regions) == 0):
             self.regions = None
+        if (self.num_rows is None) or (self.num_cols is None):
+            self.num_rows = None
+            self.num_cols = None
+        if (self.row_height is None) or (self.col_width is None):
+            self.row_height = None
+            self.col_width = None
+        if (self.regions is None) and (self.num_rows is None) and (self.row_height is None):
+            raise Exception("Neither regions nor #rows/cols nor row height/col width specified!")
         if self.region_sorting is None:
             self.region_sorting = REGION_SORTING_NONE
         if self.include_partial is None:
@@ -208,9 +227,16 @@ class MetaSubImages(Filter):
             if self._regions_lobj is not None:
                 regions_lobj = self._regions_lobj
                 regions_xyxy = self._regions_xyxy
-            else:
+            elif (self.num_rows is not None) and (self.num_cols is not None):
                 regions = generate_regions(item.image_width, item.image_height,
                                            num_rows=self.num_rows, num_cols=self.num_cols,
+                                           overlap_right=self.overlap_right, overlap_bottom=self.overlap_bottom,
+                                           logger=self.logger())
+                regions_str = regions_to_string(regions, logger=self.logger())
+                regions_lobj, regions_xyxy = parse_regions(regions_str.split(" "), self.region_sorting, self.logger())
+            else:
+                regions = generate_regions(item.image_width, item.image_height,
+                                           row_height=self.row_height, col_width=self.col_width,
                                            overlap_right=self.overlap_right, overlap_bottom=self.overlap_bottom,
                                            logger=self.logger())
                 regions_str = regions_to_string(regions, logger=self.logger())
