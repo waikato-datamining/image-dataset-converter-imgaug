@@ -119,7 +119,7 @@ class MetaSubImages(Filter):
         :rtype: argparse.ArgumentParser
         """
         parser = super()._create_argparser()
-        parser.add_argument("-r", "--regions", type=str, default=None, help="The regions (X,Y,WIDTH,HEIGHT) to crop and forward with their annotations (0-based coordinates)", required=True, nargs="+")
+        parser.add_argument("-r", "--regions", type=str, default=None, help="The regions (X,Y,WIDTH,HEIGHT) to crop and forward with their annotations (0-based coordinates)", required=False, nargs="*")
         parser.add_argument("--num_rows", type=int, help="The number of rows, if no regions defined.", default=None, required=False)
         parser.add_argument("--num_cols", type=int, help="The number of columns, if no regions defined.", default=None, required=False)
         parser.add_argument("--overlap_right", type=int, help="The overlap between two images (on the right of the left-most image), if no regions defined.", default=0, required=False)
@@ -165,8 +165,8 @@ class MetaSubImages(Filter):
 
         super().initialize()
 
-        if (self.regions is None) or (len(self.regions) == 0):
-            raise Exception("No region definitions supplied!")
+        if (self.regions is not None) and (len(self.regions) == 0):
+            self.regions = None
         if self.region_sorting is None:
             self.region_sorting = REGION_SORTING_NONE
         if self.include_partial is None:

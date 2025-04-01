@@ -9,7 +9,7 @@ Changelog
 - renamed `idc.imgaug.filter._sub_images_utils.process_image` to `extract_regions`
 - added `crop-to-label` filter that crops the image to the bbox of the annotation with the specified label
 - the `sub-images` and `meta-sub-images` filter now have options to generate a regions via predefined number
-  of rows/cols on the fly, useful when dealing with images of differing dimensions
+  of rows/cols on the fly, useful when dealing with images of differing dimensions (and the regions parameter is now optional)
 
 
 0.0.8 (2025-03-14)
