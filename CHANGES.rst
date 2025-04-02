@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.0.10 (????-??-??)
+-------------------
+
+- switched from `imgaug3` to `imaug` for numpy 2 support
+
+
 0.0.9 (2025-04-03)
 ------------------
 
