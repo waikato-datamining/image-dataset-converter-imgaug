@@ -31,7 +31,7 @@ setup(
     },
     packages=find_namespace_packages(where='src'),
     install_requires=[
-        "image_dataset_converter>=0.0.5",
+        "image_dataset_converter",
         "imaug",
         "matplotlib",
         "Shapely",
