@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.0.9 (????-??-??)
+0.0.9 (2025-04-03)
 ------------------
 
 - fixed `idc.imgaug.filter.transfer_region` method: image segmentation layers now use values (0,255)
