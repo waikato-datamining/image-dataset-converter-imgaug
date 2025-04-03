@@ -6,7 +6,8 @@ from seppl.io import Filter
 from wai.logging import LOGGING_WARNING
 from wai.common.geometry import Polygon, Point
 from wai.common.adams.imaging.locateobjects import LocatedObject, LocatedObjects
-from idc.api import ObjectDetectionData, ImageSegmentationData, make_list, flatten_list, LABEL_KEY
+from idc.api import ImageData, ObjectDetectionData, ImageSegmentationData, make_list, flatten_list, LABEL_KEY, \
+    safe_deepcopy
 from smu import mask_to_polygon, polygon_to_lists
 
 
@@ -24,7 +25,7 @@ class FindContours(Filter):
     """
 
     def __init__(self, mask_threshold: float = 0.1, mask_nth: int = 1,
-                 view_margin: int = 5, fully_connected: str = "low",
+                 view_margin: int = 5, fully_connected: str = "low", label: str = None,
                  logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initializes the filter.
@@ -37,6 +38,8 @@ class FindContours(Filter):
         :type view_margin: int
         :param fully_connected: whether regions of high or low values should be fully-connected at isthmuses
         :type fully_connected: str
+        :param label: the label to use when processing images other than image segmentation
+        :type label: str
         :param logger_name: the name to use for the logger
         :type logger_name: str
         :param logging_level: the logging level to use
@@ -47,6 +50,7 @@ class FindContours(Filter):
         self.mask_nth = mask_nth
         self.view_margin = view_margin
         self.fully_connected = fully_connected
+        self.label = label
 
     def name(self) -> str:
         """
@@ -64,7 +68,7 @@ class FindContours(Filter):
         :return: the description
         :rtype: str
         """
-        return "Detects blobs in the annotations of the image segmentation data and turns them into object detection polygons."
+        return "Detects blobs images and turns them into object detection polygons. In case of image segmentation data, the annotations are analyzed, otherwise the base image."
 
     def accepts(self) -> List:
         """
@@ -73,7 +77,7 @@ class FindContours(Filter):
         :return: the list of classes
         :rtype: list
         """
-        return [ImageSegmentationData]
+        return [ImageData]
 
     def generates(self) -> List:
         """
@@ -96,6 +100,7 @@ class FindContours(Filter):
         parser.add_argument("-n", "--mask_nth", type=float, help="The contour tracing can be slow for large masks, by using only every nth row/col, this can be sped up dramatically.", default=1, required=False)
         parser.add_argument("-m", "--view_margin", type=int, help="The margin in pixels to enlarge the view with in each direction.", default=5, required=False)
         parser.add_argument("-f", "--fully_connected", choices=CONNECTIVITY, help="Whether regions of high or low values should be fully-connected at isthmuses.", default=CONNECTIVITY_LOW, required=False)
+        parser.add_argument("--label", type=str, help="The label to use when processing images other than image segmentation ones.", default="object", required=False)
         return parser
 
     def _apply_args(self, ns: argparse.Namespace):
@@ -110,6 +115,7 @@ class FindContours(Filter):
         self.mask_nth = ns.mask_nth
         self.view_margin = ns.view_margin
         self.fully_connected = ns.fully_connected
+        self.label = ns.label
 
     def initialize(self):
         """
@@ -124,6 +130,8 @@ class FindContours(Filter):
             self.view_margin = 5
         if self.fully_connected is None:
             self.fully_connected = CONNECTIVITY_LOW
+        if self.label is None:
+            self.label = "object"
 
     def _do_process(self, data):
         """
@@ -135,12 +143,32 @@ class FindContours(Filter):
         result = []
         for item in make_list(data):
             objs = LocatedObjects()
-            for i, label in enumerate(item.annotation.labels):
-                if label not in item.annotation.layers:
-                    continue
-                layer = item.annotation.layers[label]
-                layer = np.where(layer == 255, 1, 0)
-                polys = mask_to_polygon(layer, mask_threshold=self.mask_threshold, mask_nth=self.mask_nth,
+            if isinstance(item, ImageSegmentationData):
+                for i, label in enumerate(item.annotation.labels):
+                    if label not in item.annotation.layers:
+                        continue
+                    layer = item.annotation.layers[label]
+                    layer = np.where(layer == 255, 1, 0)
+                    polys = mask_to_polygon(layer, mask_threshold=self.mask_threshold, mask_nth=self.mask_nth,
+                                            fully_connected=self.fully_connected)
+                    for poly in polys:
+                        px, py = polygon_to_lists(poly, swap_x_y=True, as_type="int")
+                        left = min(px)
+                        right = max(px)
+                        top = min(py)
+                        bottom = max(py)
+                        points = [Point(x, y) for x, y in zip(px, py)]
+                        polygon = Polygon(*points)
+                        obj = LocatedObject(left, top, right - left + 1, bottom - top + 1)
+                        obj.metadata[LABEL_KEY] = label
+                        obj.set_polygon(polygon)
+                        objs.append(obj)
+                item_new = ObjectDetectionData(source=item.source, image_name=item.image_name, data=safe_deepcopy(item.data),
+                                               annotation=objs, metadata=item.get_metadata())
+                result.append(item_new)
+            else:
+                img = np.asarray(item.image)
+                polys = mask_to_polygon(img, mask_threshold=self.mask_threshold, mask_nth=self.mask_nth,
                                         fully_connected=self.fully_connected)
                 for poly in polys:
                     px, py = polygon_to_lists(poly, swap_x_y=True, as_type="int")
@@ -151,10 +179,10 @@ class FindContours(Filter):
                     points = [Point(x, y) for x, y in zip(px, py)]
                     polygon = Polygon(*points)
                     obj = LocatedObject(left, top, right - left + 1, bottom - top + 1)
-                    obj.metadata[LABEL_KEY] = label
+                    obj.metadata[LABEL_KEY] = self.label
                     obj.set_polygon(polygon)
                     objs.append(obj)
-            item_new = ObjectDetectionData(source=item.source, image_name=item.image_name, data=item._data,
+            item_new = ObjectDetectionData(source=item.source, image_name=item.image_name, data=safe_deepcopy(item.data),
                                            annotation=objs, metadata=item.get_metadata())
             result.append(item_new)
 

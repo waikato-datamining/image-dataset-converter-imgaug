@@ -1,17 +1,18 @@
 # find-contours
 
-* accepts: idc.api.ImageSegmentationData
+* accepts: idc.api.ImageData
 * generates: idc.api.ObjectDetectionData
 
-Detects blobs in the annotations of the image segmentation data and turns them into object detection polygons.
+Detects blobs images and turns them into object detection polygons. In case of image segmentation data, the annotations are analyzed, otherwise the base image.
 
 ```
 usage: find-contours [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
                      [-N LOGGER_NAME] [-t MASK_THRESHOLD] [-n MASK_NTH]
-                     [-m VIEW_MARGIN] [-f {low,high}]
+                     [-m VIEW_MARGIN] [-f {low,high}] [--label LABEL]
 
-Detects blobs in the annotations of the image segmentation data and turns them
-into object detection polygons.
+Detects blobs images and turns them into object detection polygons. In case of
+image segmentation data, the annotations are analyzed, otherwise the base
+image.
 
 options:
   -h, --help            show this help message and exit
@@ -34,4 +35,6 @@ options:
   -f {low,high}, --fully_connected {low,high}
                         Whether regions of high or low values should be fully-
                         connected at isthmuses. (default: low)
+  --label LABEL         The label to use when processing images other than
+                        image segmentation ones. (default: object)
 ```
