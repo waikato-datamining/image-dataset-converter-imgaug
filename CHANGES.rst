@@ -5,6 +5,7 @@ Changelog
 -------------------
 
 - switched from `imgaug3` to `imaug` for numpy 2 support
+- added `roi-images` filter for extracting sub-images based on object-detection bounding boxes
 
 
 0.0.9 (2025-04-03)

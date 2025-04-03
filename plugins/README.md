@@ -12,6 +12,7 @@
 * [linear-contrast](linear-contrast.md)
 * [meta-sub-images](meta-sub-images.md)
 * [resize](resize.md)
+* [roi-images](roi-images.md)
 * [rotate](rotate.md)
 * [scale](scale.md)
 * [sub-images](sub-images.md)

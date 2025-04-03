@@ -553,3 +553,27 @@ def regions_to_string(regions: List[Region], one_based: bool = False, logger=Non
         else:
             regions_str += " %d,%d,%d,%d" % (region.x, region.y, region.w, region.h)
     return regions_str.strip()
+
+
+def locatedobject_to_region(lobj: LocatedObject) -> Region:
+    """
+    Converts a LocatedObject instance into a Region object.
+
+    :param lobj: the LocatedObject instance to convert
+    :type lobj: LocatedObject
+    :return: the Region object
+    :rtype: Region
+    """
+    return Region(x=lobj.x, y=lobj.y, w=lobj.width, h=lobj.height)
+
+
+def locatedobject_to_xyxy(lobj: LocatedObject) -> Tuple[int, int, int, int]:
+    """
+    Converts a LocatedObject instance into a tuple of x0,y0,x1,y1.
+
+    :param lobj: the LocatedObject instance to convert
+    :type lobj: LocatedObject
+    :return: the tuple of the coordinates
+    :rtype: tuple
+    """
+    return lobj.x, lobj.y, lobj.x + lobj.width - 1, lobj.y + lobj.height - 1
