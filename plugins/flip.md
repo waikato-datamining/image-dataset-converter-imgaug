@@ -7,8 +7,8 @@ Flips images either left-to-right, up-to-down or both.
 
 ```
 usage: flip [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [-N LOGGER_NAME]
-            [-m {replace,add}] [--suffix SUFFIX] [-s SEED] [-a] [-T THRESHOLD]
-            [-d {lr,ud,lrud}]
+            [--skip] [-m {replace,add}] [--suffix SUFFIX] [-s SEED] [-a]
+            [-T THRESHOLD] [-d {lr,ud,lrud}]
 
 Flips images either left-to-right, up-to-down or both.
 
@@ -19,6 +19,8 @@ options:
   -N LOGGER_NAME, --logger_name LOGGER_NAME
                         The custom name to use for the logger, uses the plugin
                         name by default (default: None)
+  --skip                Disables the plugin, removing it from the pipeline.
+                        (default: False)
   -m {replace,add}, --mode {replace,add}
                         The image augmentation mode to use. (default: replace)
   --suffix SUFFIX       The suffix to use for the file names in case of

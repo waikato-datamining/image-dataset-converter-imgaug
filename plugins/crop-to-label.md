@@ -7,7 +7,7 @@ Crops an image to the bbox with the specified label.
 
 ```
 usage: crop-to-label [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
-                     [-N LOGGER_NAME] -r REGION_LABEL [-k]
+                     [-N LOGGER_NAME] [--skip] -r REGION_LABEL [-k]
 
 Crops an image to the bbox with the specified label.
 
@@ -18,6 +18,8 @@ options:
   -N LOGGER_NAME, --logger_name LOGGER_NAME
                         The custom name to use for the logger, uses the plugin
                         name by default (default: None)
+  --skip                Disables the plugin, removing it from the pipeline.
+                        (default: False)
   -r REGION_LABEL, --region_label REGION_LABEL
                         The label of the bbox to crop the image to. (default:
                         None)

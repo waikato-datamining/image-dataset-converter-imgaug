@@ -7,7 +7,8 @@ Extracts sub-images using the bbox of all the object detection annotations that 
 
 ```
 usage: roi-images [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
-                  [-N LOGGER_NAME] [--labels [LABELS ...]] [-S SUFFIX]
+                  [-N LOGGER_NAME] [--skip] [--labels [LABELS ...]]
+                  [-S SUFFIX]
 
 Extracts sub-images using the bbox of all the object detection annotations
 that have matching labels. If no labels are specified, all annotations are
@@ -20,6 +21,8 @@ options:
   -N LOGGER_NAME, --logger_name LOGGER_NAME
                         The custom name to use for the logger, uses the plugin
                         name by default (default: None)
+  --skip                Disables the plugin, removing it from the pipeline.
+                        (default: False)
   --labels [LABELS ...]
                         The label(s) of the annotations to forward as sub-
                         images, uses all annotations if not specified.

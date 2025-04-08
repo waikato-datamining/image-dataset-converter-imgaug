@@ -7,8 +7,9 @@ Detects blobs images and turns them into object detection polygons. In case of i
 
 ```
 usage: find-contours [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
-                     [-N LOGGER_NAME] [-t MASK_THRESHOLD] [-n MASK_NTH]
-                     [-m VIEW_MARGIN] [-f {low,high}] [--label LABEL]
+                     [-N LOGGER_NAME] [--skip] [-t MASK_THRESHOLD]
+                     [-n MASK_NTH] [-m VIEW_MARGIN] [-f {low,high}]
+                     [--label LABEL]
 
 Detects blobs images and turns them into object detection polygons. In case of
 image segmentation data, the annotations are analyzed, otherwise the base
@@ -21,6 +22,8 @@ options:
   -N LOGGER_NAME, --logger_name LOGGER_NAME
                         The custom name to use for the logger, uses the plugin
                         name by default (default: None)
+  --skip                Disables the plugin, removing it from the pipeline.
+                        (default: False)
   -t MASK_THRESHOLD, --mask_threshold MASK_THRESHOLD
                         The (lower) probability threshold for mask values in
                         order to be considered part of the object (0-1).

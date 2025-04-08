@@ -7,8 +7,8 @@ Changes the grayscale values that fall below the minimum or go above the maximum
 
 ```
 usage: clip-grayscale [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
-                      [-N LOGGER_NAME] [-m MIN_VALUE] [-r MIN_REPLACEMENT]
-                      [-M MAX_VALUE] [-R MAX_REPLACEMENT]
+                      [-N LOGGER_NAME] [--skip] [-m MIN_VALUE]
+                      [-r MIN_REPLACEMENT] [-M MAX_VALUE] [-R MAX_REPLACEMENT]
 
 Changes the grayscale values that fall below the minimum or go above the
 maximum to the specified replacement values.
@@ -20,6 +20,8 @@ options:
   -N LOGGER_NAME, --logger_name LOGGER_NAME
                         The custom name to use for the logger, uses the plugin
                         name by default (default: None)
+  --skip                Disables the plugin, removing it from the pipeline.
+                        (default: False)
   -m MIN_VALUE, --min_value MIN_VALUE
                         The smallest allowed grayscale pixel value. (default:
                         0)

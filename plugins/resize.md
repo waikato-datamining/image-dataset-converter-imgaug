@@ -7,7 +7,7 @@ Resizes all images according to the specified width/height. When only resizing o
 
 ```
 usage: resize [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [-N LOGGER_NAME]
-              [-W WIDTH] [-H HEIGHT]
+              [--skip] [-W WIDTH] [-H HEIGHT]
 
 Resizes all images according to the specified width/height. When only resizing
 one dimension, use 'keep-aspect-ratio' for the other one to keep the aspect
@@ -20,6 +20,8 @@ options:
   -N LOGGER_NAME, --logger_name LOGGER_NAME
                         The custom name to use for the logger, uses the plugin
                         name by default (default: None)
+  --skip                Disables the plugin, removing it from the pipeline.
+                        (default: False)
   -W WIDTH, --width WIDTH
                         The new width for the image; use 'keep-aspect-ratio'
                         when only supplying height and you want to keep the

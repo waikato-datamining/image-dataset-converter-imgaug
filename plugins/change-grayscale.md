@@ -7,7 +7,7 @@ Changes the pixel values of grayscale images either by a factor or by a fixed va
 
 ```
 usage: change-grayscale [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
-                        [-N LOGGER_NAME] [--factor FACTOR]
+                        [-N LOGGER_NAME] [--skip] [--factor FACTOR]
                         [--increment INCREMENT]
 
 Changes the pixel values of grayscale images either by a factor or by a fixed
@@ -20,6 +20,8 @@ options:
   -N LOGGER_NAME, --logger_name LOGGER_NAME
                         The custom name to use for the logger, uses the plugin
                         name by default (default: None)
+  --skip                Disables the plugin, removing it from the pipeline.
+                        (default: False)
   --factor FACTOR       The factor with which to scale the pixel values.
                         (default: None)
   --increment INCREMENT

@@ -7,7 +7,7 @@ Extracts sub-images (incl their annotations) from the images coming through, usi
 
 ```
 usage: meta-sub-images [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
-                       [-N LOGGER_NAME] [-r [REGIONS ...]]
+                       [-N LOGGER_NAME] [--skip] [-r [REGIONS ...]]
                        [--num_rows NUM_ROWS] [--num_cols NUM_COLS]
                        [--row_height ROW_HEIGHT] [--col_width COL_WIDTH]
                        [--overlap_right OVERLAP_RIGHT]
@@ -27,6 +27,8 @@ options:
   -N LOGGER_NAME, --logger_name LOGGER_NAME
                         The custom name to use for the logger, uses the plugin
                         name by default (default: None)
+  --skip                Disables the plugin, removing it from the pipeline.
+                        (default: False)
   -r [REGIONS ...], --regions [REGIONS ...]
                         The regions (X,Y,WIDTH,HEIGHT) to crop and forward
                         with their annotations (0-based coordinates) (default:

@@ -7,9 +7,9 @@ Applies linear contrast to images.
 
 ```
 usage: linear-contrast [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
-                       [-N LOGGER_NAME] [-m {replace,add}] [--suffix SUFFIX]
-                       [-s SEED] [-a] [-T THRESHOLD] [-f FROM_ALPHA]
-                       [-t TO_ALPHA]
+                       [-N LOGGER_NAME] [--skip] [-m {replace,add}]
+                       [--suffix SUFFIX] [-s SEED] [-a] [-T THRESHOLD]
+                       [-f FROM_ALPHA] [-t TO_ALPHA]
 
 Applies linear contrast to images.
 
@@ -20,6 +20,8 @@ options:
   -N LOGGER_NAME, --logger_name LOGGER_NAME
                         The custom name to use for the logger, uses the plugin
                         name by default (default: None)
+  --skip                Disables the plugin, removing it from the pipeline.
+                        (default: False)
   -m {replace,add}, --mode {replace,add}
                         The image augmentation mode to use. (default: replace)
   --suffix SUFFIX       The suffix to use for the file names in case of

@@ -7,9 +7,9 @@ Turns RGB images into fake grayscale ones by converting them to HSL and then usi
 
 ```
 usage: hsl-grayscale [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
-                     [-N LOGGER_NAME] [-m {replace,add}] [--suffix SUFFIX]
-                     [-s SEED] [-a] [-T THRESHOLD] [-f FROM_FACTOR]
-                     [-t TO_FACTOR]
+                     [-N LOGGER_NAME] [--skip] [-m {replace,add}]
+                     [--suffix SUFFIX] [-s SEED] [-a] [-T THRESHOLD]
+                     [-f FROM_FACTOR] [-t TO_FACTOR]
 
 Turns RGB images into fake grayscale ones by converting them to HSL and then
 using the L channel for all channels. The brightness can be influenced and
@@ -22,6 +22,8 @@ options:
   -N LOGGER_NAME, --logger_name LOGGER_NAME
                         The custom name to use for the logger, uses the plugin
                         name by default (default: None)
+  --skip                Disables the plugin, removing it from the pipeline.
+                        (default: False)
   -m {replace,add}, --mode {replace,add}
                         The image augmentation mode to use. (default: replace)
   --suffix SUFFIX       The suffix to use for the file names in case of
