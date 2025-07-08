@@ -7,6 +7,8 @@ Changelog
 - switched from `imgaug3` to `imaug` for numpy 2 support
 - added `roi-images` filter for extracting sub-images based on object-detection bounding boxes
 - the `find-contours` filter now works on any type of image data
+- the `transfer_region` method (from `_sub_image_utils`) now initializes the labels of the
+  full image segmentation annotations with the labels of the sub-image(s) to ensure correct output
 
 
 0.0.9 (2025-04-03)
