@@ -309,7 +309,7 @@ def transfer_region(full_image, sub_image, region: LocatedObject, rebuild_image:
                 w = region.width
                 h = region.height
                 if (not full_image.has_annotation()) or (not full_image.has_layer(label)):
-                    full_image.new_layer(label)
+                    full_image.new_layer(label, labels=sub_image.annotation.labels)
                 layer = sub_image.annotation.layers[label]
                 layer = crop_image(layer, crop_width=crop_width, crop_height=crop_height)
                 full_image.annotation.layers[label][y:y + h, x:x + w] += layer
