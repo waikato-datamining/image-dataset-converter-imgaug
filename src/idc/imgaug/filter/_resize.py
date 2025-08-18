@@ -5,7 +5,8 @@ import imgaug.augmenters as iaa
 from seppl.io import Filter
 from wai.logging import LOGGING_WARNING
 
-from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, flatten_list, make_list
+from kasperl.api import make_list, flatten_list
+from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData
 from ._augment_util import augment_image
 
 KEEP_ASPECT_RATIO = "keep-aspect-ratio"

@@ -1,12 +1,13 @@
 import argparse
 from typing import List
 
+from build.lib.idc.registry import available_filters
 from seppl import Initializable, init_initializable
 from seppl.io import Filter
 from wai.logging import LOGGING_WARNING
 
-from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, flatten_list, make_list, \
-    parse_filter, merge_polygons
+from kasperl.api import make_list, flatten_list, parse_filter
+from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, merge_polygons
 from idc.imgaug.filter._sub_images_utils import REGION_SORTING_NONE, REGION_SORTING, PLACEHOLDERS, DEFAULT_SUFFIX, \
     parse_regions, extract_regions, generate_regions, regions_to_string, new_from_template, transfer_region, \
     prune_annotations
@@ -204,7 +205,7 @@ class MetaSubImages(Filter):
             self.overlap_bottom = 0
 
         # configure base filter
-        self._base_filter = parse_filter(self.base_filter)
+        self._base_filter = parse_filter(self.base_filter, available_filters())
         self._base_filter.session = self.session
         if isinstance(self._base_filter, Initializable):
             init_initializable(self._base_filter, "filter", raise_again=True)

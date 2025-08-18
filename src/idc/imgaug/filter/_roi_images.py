@@ -1,11 +1,13 @@
 import argparse
 from typing import List
 
-from idc.api import ObjectDetectionData, flatten_list, make_list
+from wai.logging import LOGGING_WARNING
+
+from idc.api import ObjectDetectionData
 from idc.imgaug.filter._sub_images_utils import PLACEHOLDERS, DEFAULT_SUFFIX, \
     extract_regions, locatedobject_to_xyxy
+from kasperl.api import make_list, flatten_list
 from seppl.io import Filter
-from wai.logging import LOGGING_WARNING
 
 
 class RegionOfInterestImages(Filter):

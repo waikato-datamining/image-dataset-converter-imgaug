@@ -4,7 +4,8 @@ from typing import List
 from seppl.io import Filter
 from wai.logging import LOGGING_WARNING
 
-from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, flatten_list, make_list
+from kasperl.api import make_list, flatten_list
+from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData
 from idc.imgaug.filter._sub_images_utils import REGION_SORTING_NONE, REGION_SORTING, PLACEHOLDERS, DEFAULT_SUFFIX, \
     parse_regions, extract_regions, generate_regions, regions_to_string
 

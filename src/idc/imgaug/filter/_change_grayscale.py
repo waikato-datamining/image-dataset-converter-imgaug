@@ -7,7 +7,8 @@ from PIL import Image
 from seppl.io import Filter
 from wai.logging import LOGGING_WARNING
 
-from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, flatten_list, make_list, array_to_image
+from kasperl.api import make_list, flatten_list
+from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, array_to_image
 
 
 class ChangeGrayscale(Filter):

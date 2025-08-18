@@ -6,8 +6,8 @@ from seppl.io import Filter
 from wai.logging import LOGGING_WARNING
 from wai.common.geometry import Polygon, Point
 from wai.common.adams.imaging.locateobjects import LocatedObject, LocatedObjects
-from idc.api import ImageData, ObjectDetectionData, ImageSegmentationData, make_list, flatten_list, LABEL_KEY, \
-    safe_deepcopy
+from kasperl.api import make_list, flatten_list, safe_deepcopy
+from idc.api import ImageData, ObjectDetectionData, ImageSegmentationData, LABEL_KEY
 from smu import mask_to_polygon, polygon_to_lists
 
 

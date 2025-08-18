@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.0.11 (????-??-??)
+-------------------
+
+- switched to `kasperl` library for base API and generic pipeline plugins
+
+
 0.0.10 (2025-07-11)
 -------------------
 

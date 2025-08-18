@@ -6,7 +6,8 @@ from random import Random
 from seppl.io import Filter
 from wai.logging import LOGGING_WARNING
 
-from idc.api import flatten_list, make_list, ImageData
+from kasperl.api import make_list, flatten_list
+from idc.api import ImageData
 
 MIN_RAND = 0
 MAX_RAND = 1000

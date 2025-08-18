@@ -6,13 +6,15 @@ import sys
 import traceback
 from typing import List, Dict, Tuple
 
+from idc.registry import available_readers, available_writers
 from seppl import Initializable, init_initializable, Session
 from seppl.io import locate_files, StreamWriter, BatchWriter, Writer
 from seppl.placeholders import placeholder_list
 from wai.common.adams.imaging.locateobjects import LocatedObject
 from wai.logging import init_logging, set_logging_level, add_logging_level
 
-from idc.api import ImageData, parse_reader, parse_writer, Reader, ObjectDetectionData, merge_polygons, empty_image
+from kasperl.api import parse_reader, parse_writer, Reader
+from idc.api import ImageData, ObjectDetectionData, merge_polygons, empty_image
 from idc.core import ENV_IDC_LOGLEVEL
 from idc.imgaug.filter import new_from_template, transfer_region, prune_annotations
 
@@ -192,13 +194,13 @@ def combine(input_files: List[str], group: str, x: str, y: str, width: int, heig
     :type merge_adjacent_polygons: bool
     """
     _logger.info("Instantiating reader: %s" % reader)
-    reader = parse_reader(reader)
+    reader = parse_reader(reader, available_readers())
     reader.session = Session()
     if not hasattr(reader, "source"):
         raise Exception("Reader does not have 'source' attribute: %s" % str(type(reader)))
 
     _logger.info("Instantiating writer: %s" % writer)
-    writer = parse_writer(writer)
+    writer = parse_writer(writer, available_writers())
     writer.session = Session()
 
     _logger.info("Locating files...")
