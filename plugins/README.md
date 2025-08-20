@@ -16,3 +16,4 @@
 * [rotate](rotate.md)
 * [scale](scale.md)
 * [sub-images](sub-images.md)
+* [thinning](thinning.md)

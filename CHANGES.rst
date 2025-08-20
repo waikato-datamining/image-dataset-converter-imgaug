@@ -5,6 +5,8 @@ Changelog
 -------------------
 
 - switched to `kasperl` library for base API and generic pipeline plugins
+- added `thinning` filter for skeletonizing binary images, based on
+  Lingdong Huang's code at https://github.com/LingDong-/skeleton-tracing/blob/master/py/trace_skeleton.py
 
 
 0.0.10 (2025-07-11)

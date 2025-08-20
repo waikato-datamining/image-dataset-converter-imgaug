@@ -20,3 +20,4 @@ from ._sub_images import SubImages
 from ._sub_images_utils import (parse_regions, new_from_template, extract_regions, transfer_region, prune_annotations, region_filename,
                                 PLACEHOLDERS, REGION_SORTING, REGION_SORTING_XY, REGION_SORTING_YX, REGION_SORTING_NONE, DEFAULT_SUFFIX,
                                 Region, generate_regions, regions_to_string, locatedobject_to_region, locatedobject_to_xyxy)
+from ._thinning import Thinning
