@@ -1,9 +1,7 @@
 import argparse
-import io
 from typing import List
 
 import numpy as np
-from PIL import Image
 from seppl.io import Filter
 from wai.logging import LOGGING_WARNING
 
