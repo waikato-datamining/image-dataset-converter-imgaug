@@ -41,6 +41,7 @@ class BaseImageAugmentation(BaseFilter, abc.ABC):
     Base class for stream processors that augment images.
     """
 
+    @abc.abstractmethod
     def _create_pipeline(self, aug_seed):
         """
         Creates and returns the augmentation pipeline.

@@ -97,6 +97,7 @@ class BaseFilter(Filter, abc.ABC):
             self.threshold = 0.0
         self._random = Random(self.seed)
 
+    @abc.abstractmethod
     def _default_suffix(self) -> str:
         """
         Returns the default suffix to use for images when using "add" rather than "replace" as mode.
@@ -127,6 +128,7 @@ class BaseFilter(Filter, abc.ABC):
         """
         return True
 
+    @abc.abstractmethod
     def _augment(self, item: ImageData, aug_seed: int, image_name: str) -> ImageData:
         """
         Augments the image.
