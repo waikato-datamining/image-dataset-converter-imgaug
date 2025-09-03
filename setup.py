@@ -36,6 +36,7 @@ setup(
         "matplotlib",
         "Shapely",
         "simple_mask_utils==0.0.1"
+        "opencv-contrib-python",
     ],
     version="0.0.10",
     author='Peter Reutemann',
