@@ -7,7 +7,8 @@ Thinning algorithm developed by Lingdong Huang: https://github.com/LingDong-/ske
 
 ```
 usage: thinning [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [-N LOGGER_NAME]
-                [--skip] [-f FACTOR]
+                [--skip] [-a {both,image,annotations}]
+                [-o {as-is,binary,grayscale,rgb}] [-I {skip,fail}]
 
 Thinning algorithm developed by Lingdong Huang:
 https://github.com/LingDong-/skeleton-tracing/blob/master/py/trace_skeleton.py
@@ -21,7 +22,12 @@ options:
                         name by default (default: None)
   --skip                Disables the plugin, removing it from the pipeline.
                         (default: False)
-  -f FACTOR, --factor FACTOR
-                        The factor with which to scale the image before
-                        applying the thinning algorithm. (default: 1.0)
+  -a {both,image,annotations}, --apply_to {both,image,annotations}
+                        Where to apply the filter to. (default: image)
+  -o {as-is,binary,grayscale,rgb}, --output_format {as-is,binary,grayscale,rgb}
+                        The image format to generate as output. (default: as-
+                        is)
+  -I {skip,fail}, --incorrect_format_action {skip,fail}
+                        The action to undertake if an invalid input format is
+                        encountered. (default: skip)
 ```
