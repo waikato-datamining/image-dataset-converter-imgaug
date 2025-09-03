@@ -8,6 +8,7 @@ Changelog
 - added `thinning` filter for skeletonizing binary images, based on
   Lingdong Huang's code at https://github.com/LingDong-/skeleton-tracing/blob/master/py/trace_skeleton.py
 - the `find-contours` filter now has optional min/max size restrictions for the objects
+- added `find-contours-cv2` filter which adds contours as polygon object detections using OpenCV
 
 
 0.0.10 (2025-07-11)

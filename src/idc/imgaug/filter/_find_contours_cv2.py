@@ -1,66 +1,49 @@
 import argparse
 from typing import List
 
+import cv2
 import numpy as np
-from smu import mask_to_polygon, polygon_to_lists
-from wai.common.adams.imaging.locateobjects import LocatedObject, LocatedObjects
-from wai.common.geometry import Polygon, Point
+from seppl.io import Filter
+from shapely import Polygon
+from wai.common.adams.imaging.locateobjects import LocatedObjects
 from wai.logging import LOGGING_WARNING
 
-from idc.api import ImageData, ObjectDetectionData, ImageSegmentationData, LABEL_KEY
+from idc.api import ImageData, ObjectDetectionData, ImageSegmentationData, ensure_binary, shapely_to_locatedobject
 from kasperl.api import make_list, flatten_list, safe_deepcopy
-from seppl.io import Filter
 
-CONNECTIVITY_LOW = "low"
-CONNECTIVITY_HIGH = "high"
-CONNECTIVITY = [
-    CONNECTIVITY_LOW,
-    CONNECTIVITY_HIGH,
-]
 
 MIN_RECT_WIDTH = "min_rect_width"
 MIN_RECT_HEIGHT = "min_rect_height"
 
 
-class FindContours(Filter):
+class FindContoursCV2(Filter):
     """
-    Detects blobs in the annotations of the image segmentation data and turns them into object detection polygons.
+    Finds the contours in the binary image and stores them as polygons in the annotations.
     """
 
-    def __init__(self, mask_threshold: float = 0.1, mask_nth: int = 1,
-                 view_margin: int = 5, fully_connected: str = "low", label: str = None,
-                 min_size: int = None, max_size: int = None,
+    def __init__(self, label: str = None, min_size: int = None, max_size: int = None, calculate_min_rect: bool = None,
                  logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initializes the filter.
 
-        :param mask_threshold: the (lower) probability threshold for mask values in order to be considered part of the object (0-1)
-        :type mask_threshold: float
-        :param mask_nth: the contour tracing can be slow for large masks, by using only every nth row/col, this can be sped up dramatically
-        :type mask_nth: int
-        :param view_margin: the margin in pixels to enlarge the view with in each direction
-        :type view_margin: int
-        :param fully_connected: whether regions of high or low values should be fully-connected at isthmuses
-        :type fully_connected: str
-        :param label: the label to use when processing images other than image segmentation
+        :param label: the label to use for the detected contours
         :type label: str
         :param min_size: the minimum width or height contours must have
         :type min_size: int
         :param max_size: the maximum width or height contours can have
         :type max_size: int
+        :param calculate_min_rect: whether to calculate the minimal rectangle for each contour
+        :type calculate_min_rect: bool
         :param logger_name: the name to use for the logger
         :type logger_name: str
         :param logging_level: the logging level to use
         :type logging_level: str
         """
         super().__init__(logger_name=logger_name, logging_level=logging_level)
-        self.mask_threshold = mask_threshold
-        self.mask_nth = mask_nth
-        self.view_margin = view_margin
-        self.fully_connected = fully_connected
         self.label = label
         self.min_size = min_size
         self.max_size = max_size
+        self.calculate_min_rect = calculate_min_rect
 
     def name(self) -> str:
         """
@@ -69,17 +52,21 @@ class FindContours(Filter):
         :return: the name
         :rtype: str
         """
-        return "find-contours"
+        return "find-contours-cv2"
 
     def description(self) -> str:
         """
-        Returns a description of the filter.
+        Returns a description of the handler.
 
         :return: the description
         :rtype: str
         """
-        return "Detects blobs images using scikit-image's find_contours method and turns them into object detection polygons. " \
-            + "In case of image segmentation data, the annotations are analyzed, otherwise the base image."
+        return "Finds the contours in the binary image using OpenCV's findContours method and stores "\
+            + "them as polygons in the annotations. "\
+            + "In case of image segmentation data, the annotations are analyzed, otherwise the base image."\
+            + "When calculating the minimal rectangles, the following fields get added to the meta-data "\
+            + "of the objects: " + MIN_RECT_WIDTH + ", " + MIN_RECT_HEIGHT + ". "\
+            + "The minimal rectangle width/height also get checked against the specified min/max sizes."
 
     def accepts(self) -> List:
         """
@@ -107,13 +94,10 @@ class FindContours(Filter):
         :rtype: argparse.ArgumentParser
         """
         parser = super()._create_argparser()
-        parser.add_argument("-t", "--mask_threshold", type=float, help="The (lower) probability threshold for mask values in order to be considered part of the object (0-1).", default=0.1, required=False)
-        parser.add_argument("-n", "--mask_nth", type=float, help="The contour tracing can be slow for large masks, by using only every nth row/col, this can be sped up dramatically.", default=1, required=False)
-        parser.add_argument("-v", "--view_margin", type=int, help="The margin in pixels to enlarge the view with in each direction.", default=5, required=False)
-        parser.add_argument("-f", "--fully_connected", choices=CONNECTIVITY, help="Whether regions of high or low values should be fully-connected at isthmuses.", default=CONNECTIVITY_LOW, required=False)
         parser.add_argument("--label", type=str, help="The label to use when processing images other than image segmentation ones.", default="object", required=False)
         parser.add_argument("-m", "--min_size", type=int, default=None, help="The minimum width or height that detected contours must have.", required=False)
         parser.add_argument("-M", "--max_size", type=int, default=None, help="The maximum width or height that detected contours can have.", required=False)
+        parser.add_argument("-r", "--calculate_min_rect", action="store_true", help="Whether to calculate the minimal rectangle for each contour.", required=False)
         return parser
 
     def _apply_args(self, ns: argparse.Namespace):
@@ -124,29 +108,18 @@ class FindContours(Filter):
         :type ns: argparse.Namespace
         """
         super()._apply_args(ns)
-        self.mask_threshold = ns.mask_threshold
-        self.mask_nth = ns.mask_nth
-        self.view_margin = ns.view_margin
-        self.fully_connected = ns.fully_connected
         self.label = ns.label
         self.min_size = ns.min_size
         self.max_size = ns.max_size
+        self.calculate_min_rect = ns.calculate_min_rect
 
     def initialize(self):
         """
         Initializes the processing, e.g., for opening files or databases.
         """
         super().initialize()
-        if self.mask_threshold is None:
-            self.mask_threshold = 0.1
-        if self.mask_nth is None:
-            self.mask_nth = 1
-        if self.view_margin is None:
-            self.view_margin = 5
-        if self.fully_connected is None:
-            self.fully_connected = CONNECTIVITY_LOW
-        if self.label is None:
-            self.label = "object"
+        if self.calculate_min_rect is None:
+            self.calculate_min_rect = False
 
     def _check_dimension(self, dim) -> bool:
         """
@@ -164,32 +137,37 @@ class FindContours(Filter):
                 return False
         return True
 
-    def _add_contours(self, img: np.ndarray, ann: LocatedObjects, label: str):
+    def _add_contours(self, contours, ann: LocatedObjects, label: str):
         """
-        Locates the contours in the image and adds the polygons to the annotations.
+        Processes the contours and adds the polygons to the annotations.
 
-        :param img: the image to process
+        :param contours: the contours to process
         :param ann: the annotations to append
         :type ann: LocatedObjects
         :param label: the label to use
         :type label: str
         """
-        polys = mask_to_polygon(img, mask_threshold=self.mask_threshold, mask_nth=self.mask_nth,
-                                fully_connected=self.fully_connected)
-        for poly in polys:
-            px, py = polygon_to_lists(poly, swap_x_y=True, as_type="int")
-            left = min(px)
-            right = max(px)
-            top = min(py)
-            bottom = max(py)
-            points = [Point(x, y) for x, y in zip(px, py)]
-            polygon = Polygon(*points)
-            obj = LocatedObject(left, top, right - left + 1, bottom - top + 1)
-            obj.metadata[LABEL_KEY] = label
-            obj.set_polygon(polygon)
-            if not self._check_dimension(obj.width) or not self._check_dimension(obj.height):
-                continue
-            ann.append(obj)
+        for i in range(len(contours)):
+            if len(contours[i]) > 2:
+                polygon = Polygon(np.squeeze(contours[i]))
+                # Convert invalid polygon to valid
+                if not polygon.is_valid:
+                    polygon = polygon.buffer(0)
+                lobj = shapely_to_locatedobject(polygon, label=label)
+                if self.min_size is not None:
+                    if not self._check_dimension(lobj.width) or not self._check_dimension(lobj.height):
+                        continue
+                if self.max_size is not None:
+                    if not self._check_dimension(lobj.width) or not self._check_dimension(lobj.height):
+                        continue
+                if self.calculate_min_rect:
+                    rect = cv2.minAreaRect(contours[i])
+                    (_, _), (w, h), angle = rect
+                    if not self._check_dimension(w) or not self._check_dimension(h):
+                        continue
+                    lobj.metadata[MIN_RECT_WIDTH] = w
+                    lobj.metadata[MIN_RECT_HEIGHT] = h
+                ann.append(lobj)
 
     def _do_process(self, data):
         """
@@ -199,6 +177,7 @@ class FindContours(Filter):
         :return: the potentially updated record(s)
         """
         result = []
+
         for item in make_list(data):
             ann = LocatedObjects()
 
@@ -208,10 +187,14 @@ class FindContours(Filter):
                         continue
                     layer = item.annotation.layers[label]
                     layer = np.where(layer > 0, 1, 0)
-                    self._add_contours(layer, ann, label)
+                    contours, _ = cv2.findContours(np.array(layer).astype(np.uint8), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                    self.logger().info("%s - # of contours: %s" % (label, str(len(contours))))
+                    self._add_contours(contours, ann, label)
             else:
-                img = np.asarray(item.image)
-                self._add_contours(img, ann, self.label)
+                binary = ensure_binary(item.image, self.logger())
+                contours, _ = cv2.findContours(np.array(binary).astype(np.uint8), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                self.logger().info("# of contours: %s" % str(len(contours)))
+                self._add_contours(contours, ann, self.label)
 
             self.logger().info("# of polygons added: %s" % str(len(ann)))
             item_new = ObjectDetectionData(source=item.source, image_name=item.image_name, data=safe_deepcopy(item.data),
