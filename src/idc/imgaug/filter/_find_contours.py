@@ -1,4 +1,5 @@
 import argparse
+import cv2
 import numpy as np
 from typing import List
 
@@ -18,6 +19,9 @@ CONNECTIVITY = [
     CONNECTIVITY_HIGH,
 ]
 
+MIN_RECT_WIDTH = "min_rect_width"
+MIN_RECT_HEIGHT = "min_rect_height"
+
 
 class FindContours(Filter):
     """
@@ -26,6 +30,7 @@ class FindContours(Filter):
 
     def __init__(self, mask_threshold: float = 0.1, mask_nth: int = 1,
                  view_margin: int = 5, fully_connected: str = "low", label: str = None,
+                 min_size: int = None, max_size: int = None,
                  logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initializes the filter.
@@ -40,6 +45,10 @@ class FindContours(Filter):
         :type fully_connected: str
         :param label: the label to use when processing images other than image segmentation
         :type label: str
+        :param min_size: the minimum width or height contours must have
+        :type min_size: int
+        :param max_size: the maximum width or height contours can have
+        :type max_size: int
         :param logger_name: the name to use for the logger
         :type logger_name: str
         :param logging_level: the logging level to use
@@ -51,6 +60,8 @@ class FindContours(Filter):
         self.view_margin = view_margin
         self.fully_connected = fully_connected
         self.label = label
+        self.min_size = min_size
+        self.max_size = max_size
 
     def name(self) -> str:
         """
@@ -68,7 +79,8 @@ class FindContours(Filter):
         :return: the description
         :rtype: str
         """
-        return "Detects blobs images and turns them into object detection polygons. In case of image segmentation data, the annotations are analyzed, otherwise the base image."
+        return "Detects blobs images using scikit-image's find_contours method and turns them into object detection polygons. " \
+            + "In case of image segmentation data, the annotations are analyzed, otherwise the base image."
 
     def accepts(self) -> List:
         """
@@ -98,9 +110,11 @@ class FindContours(Filter):
         parser = super()._create_argparser()
         parser.add_argument("-t", "--mask_threshold", type=float, help="The (lower) probability threshold for mask values in order to be considered part of the object (0-1).", default=0.1, required=False)
         parser.add_argument("-n", "--mask_nth", type=float, help="The contour tracing can be slow for large masks, by using only every nth row/col, this can be sped up dramatically.", default=1, required=False)
-        parser.add_argument("-m", "--view_margin", type=int, help="The margin in pixels to enlarge the view with in each direction.", default=5, required=False)
+        parser.add_argument("-v", "--view_margin", type=int, help="The margin in pixels to enlarge the view with in each direction.", default=5, required=False)
         parser.add_argument("-f", "--fully_connected", choices=CONNECTIVITY, help="Whether regions of high or low values should be fully-connected at isthmuses.", default=CONNECTIVITY_LOW, required=False)
         parser.add_argument("--label", type=str, help="The label to use when processing images other than image segmentation ones.", default="object", required=False)
+        parser.add_argument("-m", "--min_size", type=int, default=None, help="The minimum width or height that detected contours must have.", required=False)
+        parser.add_argument("-M", "--max_size", type=int, default=None, help="The maximum width or height that detected contours can have.", required=False)
         return parser
 
     def _apply_args(self, ns: argparse.Namespace):
@@ -116,6 +130,8 @@ class FindContours(Filter):
         self.view_margin = ns.view_margin
         self.fully_connected = ns.fully_connected
         self.label = ns.label
+        self.min_size = ns.min_size
+        self.max_size = ns.max_size
 
     def initialize(self):
         """
@@ -132,6 +148,22 @@ class FindContours(Filter):
             self.fully_connected = CONNECTIVITY_LOW
         if self.label is None:
             self.label = "object"
+
+    def _check_dimension(self, dim) -> bool:
+        """
+        Checks whether the dimension fits the min/max size.
+
+        :param dim: the width/height to check
+        :return: True if within specified min/max
+        :rtype: bool
+        """
+        if self.min_size is not None:
+            if dim < self.min_size:
+                return False
+        if self.max_size is not None:
+            if dim > self.max_size:
+                return False
+        return True
 
     def _do_process(self, data):
         """
@@ -162,6 +194,8 @@ class FindContours(Filter):
                         obj = LocatedObject(left, top, right - left + 1, bottom - top + 1)
                         obj.metadata[LABEL_KEY] = label
                         obj.set_polygon(polygon)
+                        if not self._check_dimension(obj.width) or not self._check_dimension(obj.height):
+                            continue
                         objs.append(obj)
                 item_new = ObjectDetectionData(source=item.source, image_name=item.image_name, data=safe_deepcopy(item.data),
                                                annotation=objs, metadata=item.get_metadata())
@@ -181,6 +215,8 @@ class FindContours(Filter):
                     obj = LocatedObject(left, top, right - left + 1, bottom - top + 1)
                     obj.metadata[LABEL_KEY] = self.label
                     obj.set_polygon(polygon)
+                    if not self._check_dimension(obj.width) or not self._check_dimension(obj.height):
+                        continue
                     objs.append(obj)
             item_new = ObjectDetectionData(source=item.source, image_name=item.image_name, data=safe_deepcopy(item.data),
                                            annotation=objs, metadata=item.get_metadata())

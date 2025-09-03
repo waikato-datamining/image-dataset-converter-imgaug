@@ -3,17 +3,17 @@
 * accepts: idc.api.ImageData
 * generates: idc.api.ObjectDetectionData
 
-Detects blobs images and turns them into object detection polygons. In case of image segmentation data, the annotations are analyzed, otherwise the base image.
+Detects blobs images using scikit-image's find_contours method and turns them into object detection polygons. In case of image segmentation data, the annotations are analyzed, otherwise the base image.
 
 ```
 usage: find-contours [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
                      [-N LOGGER_NAME] [--skip] [-t MASK_THRESHOLD]
-                     [-n MASK_NTH] [-m VIEW_MARGIN] [-f {low,high}]
-                     [--label LABEL]
+                     [-n MASK_NTH] [-v VIEW_MARGIN] [-f {low,high}]
+                     [--label LABEL] [-m MIN_SIZE] [-M MAX_SIZE]
 
-Detects blobs images and turns them into object detection polygons. In case of
-image segmentation data, the annotations are analyzed, otherwise the base
-image.
+Detects blobs images using scikit-image's find_contours method and turns them
+into object detection polygons. In case of image segmentation data, the
+annotations are analyzed, otherwise the base image.
 
 options:
   -h, --help            show this help message and exit
@@ -32,7 +32,7 @@ options:
                         The contour tracing can be slow for large masks, by
                         using only every nth row/col, this can be sped up
                         dramatically. (default: 1)
-  -m VIEW_MARGIN, --view_margin VIEW_MARGIN
+  -v VIEW_MARGIN, --view_margin VIEW_MARGIN
                         The margin in pixels to enlarge the view with in each
                         direction. (default: 5)
   -f {low,high}, --fully_connected {low,high}
@@ -40,4 +40,10 @@ options:
                         connected at isthmuses. (default: low)
   --label LABEL         The label to use when processing images other than
                         image segmentation ones. (default: object)
+  -m MIN_SIZE, --min_size MIN_SIZE
+                        The minimum width or height that detected contours
+                        must have. (default: None)
+  -M MAX_SIZE, --max_size MAX_SIZE
+                        The maximum width or height that detected contours can
+                        have. (default: None)
 ```
