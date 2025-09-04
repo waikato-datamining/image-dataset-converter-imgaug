@@ -159,7 +159,7 @@ class FastLineDetection(Filter):
         if lines is not None:
             for line in lines:
                 x0, y0, x1, y1 = line[0]
-                points = [Point(x0, y0), Point(x0, y0), Point(x1, y1), Point(x1, y1)]
+                points = [Point(x0, y0), Point(x1, y1), Point(x0, y0)]
                 polygon = Polygon(*points)
                 obj = LocatedObject(x0, y0, x1 - x0 + 1, y1 - y0 + 1)
                 obj.metadata[LABEL_KEY] = label
