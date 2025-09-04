@@ -102,7 +102,7 @@ class FastLineDetection(Filter):
         parser.add_argument("--canny_th1", type=float, default=50.0, help="First threshold for hysteresis procedure in Canny().", required=False)
         parser.add_argument("--canny_th2", type=float, default=50.0, help="Second threshold for hysteresis procedure in Canny().", required=False)
         parser.add_argument("--canny_aperture_size", type=int, default=3, help="Aperture size for the sobel operator in Canny(). If zero, Canny() is not applied and the input image is taken as an edge image.", required=False)
-        parser.add_argument("--do_merge", action="store_true", help="	If true, incremental merging of segments will be performed.", required=False)
+        parser.add_argument("--do_merge", action="store_true", help="If true, incremental merging of segments will be performed.", required=False)
         return parser
 
     def _apply_args(self, ns: argparse.Namespace):
