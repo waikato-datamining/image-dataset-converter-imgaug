@@ -19,3 +19,4 @@
 * [scale](scale.md)
 * [sub-images](sub-images.md)
 * [thinning](thinning.md)
+* [trace-skeleton](trace-skeleton.md)

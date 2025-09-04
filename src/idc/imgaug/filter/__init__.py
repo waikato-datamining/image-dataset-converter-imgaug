@@ -23,3 +23,4 @@ from ._sub_images_utils import (parse_regions, new_from_template, extract_region
                                 PLACEHOLDERS, REGION_SORTING, REGION_SORTING_XY, REGION_SORTING_YX, REGION_SORTING_NONE, DEFAULT_SUFFIX,
                                 Region, generate_regions, regions_to_string, locatedobject_to_region, locatedobject_to_xyxy)
 from ._thinning import Thinning
+from ._trace_skeleton import TraceSkeleton

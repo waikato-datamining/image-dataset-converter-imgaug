@@ -5,7 +5,7 @@ Changelog
 -------------------
 
 - switched to `kasperl` library for base API and generic pipeline plugins
-- added `thinning` filter for skeletonizing binary images, based on
+- added `thinning`/`trace-skeleton` filters for skeletonizing binary images, based on
   Lingdong Huang's code at https://github.com/LingDong-/skeleton-tracing/blob/master/py/trace_skeleton.py
 - the `find-contours` filter now has optional min/max size restrictions for the objects
 - added `find-contours-cv2` filter which adds contours as polygon object detections using OpenCV

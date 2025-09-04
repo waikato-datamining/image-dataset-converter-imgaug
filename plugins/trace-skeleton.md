@@ -1,16 +1,17 @@
-# thinning
+# trace-skeleton
 
-* accepts: idc.api.ImageClassificationData, idc.api.ObjectDetectionData, idc.api.ImageSegmentationData
-* generates: idc.api.ImageClassificationData, idc.api.ObjectDetectionData, idc.api.ImageSegmentationData
+* accepts: idc.api.ImageData
+* generates: idc.api.ObjectDetectionData
 
-Thinning algorithm developed by Lingdong Huang: https://github.com/LingDong-/skeleton-tracing/blob/master/py/trace_skeleton.py
+Thinning and tracing algorithm developed by Lingdong Huang: https://github.com/LingDong-/skeleton-tracing/blob/master/py/trace_skeleton.py
 
 ```
-usage: thinning [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [-N LOGGER_NAME]
-                [--skip] [-I {skip,fail}] [-a {both,image,annotations}]
-                [-o {as-is,binary,grayscale,rgb}]
+usage: trace-skeleton [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
+                      [-N LOGGER_NAME] [--skip] [-I {skip,fail}]
+                      [-a {both,image,annotations}] [-c SIZE] [-m ITER]
+                      [-o {as-is,binary,grayscale,rgb}] [--label LABEL]
 
-Thinning algorithm developed by Lingdong Huang:
+Thinning and tracing algorithm developed by Lingdong Huang:
 https://github.com/LingDong-/skeleton-tracing/blob/master/py/trace_skeleton.py
 
 options:
@@ -27,7 +28,14 @@ options:
                         encountered. (default: skip)
   -a {both,image,annotations}, --apply_to {both,image,annotations}
                         Where to apply the filter to. (default: image)
+  -c SIZE, --chunk_size SIZE
+                        The chunk size to use. (default: 10)
+  -m ITER, --max_iter ITER
+                        The maximum number of iterations to perform. (default:
+                        999)
   -o {as-is,binary,grayscale,rgb}, --output_format {as-is,binary,grayscale,rgb}
                         The image format to generate as output. (default: as-
                         is)
+  --label LABEL         The label to use when processing images other than
+                        image segmentation ones. (default: object)
 ```
