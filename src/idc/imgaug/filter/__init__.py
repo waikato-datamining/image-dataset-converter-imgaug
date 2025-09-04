@@ -12,6 +12,7 @@ from ._find_contours_cv2 import FindContoursCV2
 from ._flip import Flip
 from ._gaussian_blur import GaussianBlur
 from ._hsl_grayscale import HSLGrayScale
+from ._hough_lines_prob import HoughLinesProbabilistic
 from ._linear_contrast import LinearContrast
 from ._meta_sub_images import MetaSubImages
 from ._resize import Resize

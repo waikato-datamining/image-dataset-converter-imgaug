@@ -10,6 +10,7 @@
 * [find-contours-cv2](find-contours-cv2.md)
 * [flip](flip.md)
 * [gaussian-blur](gaussian-blur.md)
+* [hough-lines-prob](hough-lines-prob.md)
 * [hsl-grayscale](hsl-grayscale.md)
 * [linear-contrast](linear-contrast.md)
 * [meta-sub-images](meta-sub-images.md)

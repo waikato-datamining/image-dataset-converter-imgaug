@@ -9,8 +9,8 @@ Changelog
   Lingdong Huang's code at https://github.com/LingDong-/skeleton-tracing/blob/master/py/trace_skeleton.py
 - the `find-contours` filter now has optional min/max size restrictions for the objects
 - added `find-contours-cv2` filter which adds contours as polygon object detections using OpenCV
-- added `fast-line-detection` filter for detecting lines in images and adding them as polygon
-  object detection annotations
+- added `fast-line-detection`/`hough-lines-prob` filters for detecting lines in images and adding
+  them as polygon object detection annotations
 
 
 0.0.10 (2025-07-11)
