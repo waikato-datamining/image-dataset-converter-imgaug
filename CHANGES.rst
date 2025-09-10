@@ -11,6 +11,7 @@ Changelog
 - added `find-contours-cv2` filter which adds contours as polygon object detections using OpenCV
 - added `fast-line-detection`/`hough-lines-prob` filters for detecting lines in images and adding
   them as polygon object detection annotations
+- added `simple-blob-detector` filter which adds detected blobs as bounding box object detections using OpenCV
 
 
 0.0.10 (2025-07-11)

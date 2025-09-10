@@ -19,6 +19,7 @@ from ._resize import Resize
 from ._roi_images import RegionOfInterestImages
 from ._rotate import Rotate
 from ._scale import Scale
+from ._simple_blob_detector import SimpleBlobDetector
 from ._sub_images import SubImages
 from ._sub_images_utils import (parse_regions, new_from_template, extract_regions, transfer_region, prune_annotations, region_filename,
                                 PLACEHOLDERS, REGION_SORTING, REGION_SORTING_XY, REGION_SORTING_YX, REGION_SORTING_NONE, DEFAULT_SUFFIX,

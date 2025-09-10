@@ -18,6 +18,7 @@
 * [roi-images](roi-images.md)
 * [rotate](rotate.md)
 * [scale](scale.md)
+* [simple-blob-detector](simple-blob-detector.md)
 * [sub-images](sub-images.md)
 * [thinning](thinning.md)
 * [trace-skeleton](trace-skeleton.md)
