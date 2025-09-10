@@ -153,6 +153,8 @@ class FindContoursCV2(Filter):
                 # Convert invalid polygon to valid
                 if not polygon.is_valid:
                     polygon = polygon.buffer(0)
+                if polygon.area == 0.0:
+                    continue
                 lobj = shapely_to_locatedobject(polygon, label=label)
                 if self.min_size is not None:
                     if not self._check_dimension(lobj.width) or not self._check_dimension(lobj.height):
