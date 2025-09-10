@@ -2,14 +2,14 @@ import argparse
 from typing import List
 
 import numpy as np
-from seppl.io import Filter
+from seppl.io import BatchFilter
 from wai.logging import LOGGING_WARNING
 
 from kasperl.api import make_list, flatten_list
 from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, array_to_image
 
 
-class ClipGrayscale(Filter):
+class ClipGrayscale(BatchFilter):
     """
     Changes the pixel values of grayscale images either by a factor or by a fixed value.
     """

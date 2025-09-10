@@ -9,12 +9,12 @@ from wai.common.adams.imaging.locateobjects import LocatedObjects, LocatedObject
 from wai.common.geometry import Polygon, Point
 from wai.logging import LOGGING_WARNING
 
-from idc.api import ImageData, ObjectDetectionData, ImageSegmentationData, LABEL_KEY, ensure_grayscale
+from seppl.io import BatchFilter
 from kasperl.api import make_list, flatten_list, safe_deepcopy
-from seppl.io import Filter
+from idc.api import ImageData, ObjectDetectionData, ImageSegmentationData, LABEL_KEY, ensure_grayscale
 
 
-class HoughLinesProbabilistic(Filter):
+class HoughLinesProbabilistic(BatchFilter):
     """
     Detects lines in the image and stores them as polygons.
     """

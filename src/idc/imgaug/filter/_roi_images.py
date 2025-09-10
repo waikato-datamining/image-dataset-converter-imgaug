@@ -3,14 +3,14 @@ from typing import List
 
 from wai.logging import LOGGING_WARNING
 
+from seppl.io import BatchFilter
+from kasperl.api import make_list, flatten_list
 from idc.api import ObjectDetectionData
 from idc.imgaug.filter._sub_images_utils import PLACEHOLDERS, DEFAULT_SUFFIX, \
     extract_regions, locatedobject_to_xyxy
-from kasperl.api import make_list, flatten_list
-from seppl.io import Filter
 
 
-class RegionOfInterestImages(Filter):
+class RegionOfInterestImages(BatchFilter):
     """
     Extracts sub-images using the bbox of all the annotations that have matching labels.
     """

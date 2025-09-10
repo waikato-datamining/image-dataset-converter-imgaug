@@ -7,9 +7,9 @@ from wai.common.adams.imaging.locateobjects import LocatedObject, LocatedObjects
 from wai.common.geometry import Polygon, Point
 from wai.logging import LOGGING_WARNING
 
-from idc.api import ImageData, ObjectDetectionData, ImageSegmentationData, LABEL_KEY
+from seppl.io import BatchFilter
 from kasperl.api import make_list, flatten_list, safe_deepcopy
-from seppl.io import Filter
+from idc.api import ImageData, ObjectDetectionData, ImageSegmentationData, LABEL_KEY
 
 CONNECTIVITY_LOW = "low"
 CONNECTIVITY_HIGH = "high"
@@ -22,7 +22,7 @@ MIN_RECT_WIDTH = "min_rect_width"
 MIN_RECT_HEIGHT = "min_rect_height"
 
 
-class FindContours(Filter):
+class FindContours(BatchFilter):
     """
     Detects blobs in the annotations of the image segmentation data and turns them into object detection polygons.
     """

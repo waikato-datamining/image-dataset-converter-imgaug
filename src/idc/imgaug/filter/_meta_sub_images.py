@@ -3,7 +3,7 @@ from typing import List
 
 from wai.logging import LOGGING_WARNING
 from seppl import Initializable, init_initializable
-from seppl.io import Filter
+from seppl.io import BatchFilter
 from kasperl.api import make_list, flatten_list, parse_filter
 from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, merge_polygons
 from idc.registry import available_filters
@@ -12,7 +12,7 @@ from idc.imgaug.filter._sub_images_utils import REGION_SORTING_NONE, REGION_SORT
     prune_annotations
 
 
-class MetaSubImages(Filter):
+class MetaSubImages(BatchFilter):
     """
     Extracts sub-images (incl their annotations) from the images coming through, using the defined regions, and
     passes them through the base filter before reassembling them again.

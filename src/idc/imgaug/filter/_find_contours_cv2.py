@@ -3,7 +3,7 @@ from typing import List
 
 import cv2
 import numpy as np
-from seppl.io import Filter
+from seppl.io import BatchFilter
 from shapely import Polygon
 from wai.common.adams.imaging.locateobjects import LocatedObjects
 from wai.logging import LOGGING_WARNING
@@ -16,7 +16,7 @@ MIN_RECT_WIDTH = "min_rect_width"
 MIN_RECT_HEIGHT = "min_rect_height"
 
 
-class FindContoursCV2(Filter):
+class FindContoursCV2(BatchFilter):
     """
     Finds the contours in the binary image and stores them as polygons in the annotations.
     """

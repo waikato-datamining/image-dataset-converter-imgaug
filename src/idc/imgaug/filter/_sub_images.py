@@ -1,7 +1,7 @@
 import argparse
 from typing import List
 
-from seppl.io import Filter
+from seppl.io import BatchFilter
 from wai.logging import LOGGING_WARNING
 
 from kasperl.api import make_list, flatten_list
@@ -10,7 +10,7 @@ from idc.imgaug.filter._sub_images_utils import REGION_SORTING_NONE, REGION_SORT
     parse_regions, extract_regions, generate_regions, regions_to_string
 
 
-class SubImages(Filter):
+class SubImages(BatchFilter):
     """
     Extracts sub-images (incl their annotations) from the images coming through, using the defined regions.
     """

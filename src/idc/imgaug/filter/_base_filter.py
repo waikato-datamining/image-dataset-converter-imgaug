@@ -3,7 +3,7 @@ import argparse
 import os
 from random import Random
 
-from seppl.io import Filter
+from seppl.io import BatchFilter
 from wai.logging import LOGGING_WARNING
 
 from kasperl.api import make_list, flatten_list
@@ -21,7 +21,7 @@ IMGAUG_MODES = [
 ]
 
 
-class BaseFilter(Filter, abc.ABC):
+class BaseFilter(BatchFilter, abc.ABC):
     """
     Ancestor for image augmentation filters.
     """

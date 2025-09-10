@@ -1,7 +1,7 @@
 import argparse
 from typing import List, Optional
 
-from seppl.io import Filter
+from seppl.io import BatchFilter
 from wai.logging import LOGGING_WARNING
 
 from kasperl.api import make_list, flatten_list
@@ -9,7 +9,7 @@ from idc.api import ObjectDetectionData
 from idc.imgaug.filter._sub_images_utils import extract_regions
 
 
-class CropToLabel(Filter):
+class CropToLabel(BatchFilter):
     """
     Resizes all images according to the specified width/height. When only resizing one dimension, use 'keep-aspect-ratio' for the other one to keep the aspect ratio intact.
     """

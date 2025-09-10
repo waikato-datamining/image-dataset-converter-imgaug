@@ -2,7 +2,7 @@ import argparse
 from typing import List, Union
 
 import imgaug.augmenters as iaa
-from seppl.io import Filter
+from seppl.io import BatchFilter
 from wai.logging import LOGGING_WARNING
 
 from kasperl.api import make_list, flatten_list
@@ -12,7 +12,7 @@ from ._augment_util import augment_image
 KEEP_ASPECT_RATIO = "keep-aspect-ratio"
 
 
-class Resize(Filter):
+class Resize(BatchFilter):
     """
     Resizes all images according to the specified width/height. When only resizing one dimension, use 'keep-aspect-ratio' for the other one to keep the aspect ratio intact.
     """
