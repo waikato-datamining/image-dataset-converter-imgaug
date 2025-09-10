@@ -197,7 +197,8 @@ class FindContoursCV2(Filter):
                 self._add_contours(contours, ann, self.label)
 
             self.logger().info("# of polygons added: %s" % str(len(ann)))
-            item_new = ObjectDetectionData(source=item.source, image_name=item.image_name, data=safe_deepcopy(item.data),
+            item_new = ObjectDetectionData(source=item.source, image_name=item.image_name,
+                                           image=safe_deepcopy(item.image), data=safe_deepcopy(item.data),
                                            annotation=ann, metadata=item.get_metadata())
             result.append(item_new)
 
