@@ -33,8 +33,8 @@ options:
                         from 0 to 1000 for the augmentation. (default: False)
   -T THRESHOLD, --threshold THRESHOLD
                         the threshold to use for Random.rand(): if equal or
-                        above, augmentation gets applied; range: 0-1; default:
-                        0 (= always) (default: 0.0)
+                        above, augmentation gets applied; range: 0-1 with 0 =
+                        always (default: 0.0)
   -f FROM_PERCENT, --from_percent FROM_PERCENT
                         The minimum percent to crop from images (0-1).
                         (default: None)

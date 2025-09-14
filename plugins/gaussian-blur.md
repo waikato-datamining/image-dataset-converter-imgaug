@@ -34,8 +34,8 @@ options:
                         from 0 to 1000 for the augmentation. (default: False)
   -T THRESHOLD, --threshold THRESHOLD
                         the threshold to use for Random.rand(): if equal or
-                        above, augmentation gets applied; range: 0-1; default:
-                        0 (= always) (default: 0.0)
+                        above, augmentation gets applied; range: 0-1 with 0 =
+                        always (default: 0.0)
   -f FROM_SIGMA, --from_sigma FROM_SIGMA
                         The minimum sigma for the blur. (default: None)
   -t TO_SIGMA, --to_sigma TO_SIGMA

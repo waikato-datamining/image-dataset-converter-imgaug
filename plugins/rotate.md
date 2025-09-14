@@ -35,8 +35,8 @@ options:
                         from 0 to 1000 for the augmentation. (default: False)
   -T THRESHOLD, --threshold THRESHOLD
                         the threshold to use for Random.rand(): if equal or
-                        above, augmentation gets applied; range: 0-1; default:
-                        0 (= always) (default: 0.0)
+                        above, augmentation gets applied; range: 0-1 with 0 =
+                        always (default: 0.0)
   -f FROM_DEGREE, --from_degree FROM_DEGREE
                         The start of the degree range to use for rotating the
                         images. (default: None)
