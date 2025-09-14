@@ -67,7 +67,7 @@ class BaseFilter(BatchFilter, abc.ABC):
         parser.add_argument("--suffix", type=str, help="The suffix to use for the file names in case of augmentation mode %s." % IMGAUG_MODE_ADD, default=None, required=False)
         parser.add_argument("-s", "--seed", type=int, help="The seed value to use for the random number generator; randomly seeded if not provided", default=None, required=False)
         parser.add_argument("-a", "--seed_augmentation", action="store_true", help="Whether to seed the augmentation; if specified, uses the seeded random generator to produce a seed value from %d to %d for the augmentation." % (MIN_RAND, MAX_RAND), required=False)
-        parser.add_argument("-T", "--threshold", type=float, help="the threshold to use for Random.rand(): if equal or above, augmentation gets applied; range: 0-1; default: 0 (= always)", default=0.0, required=False)
+        parser.add_argument("-T", "--threshold", type=float, help="the threshold to use for Random.rand(): if equal or above, augmentation gets applied; range: 0-1 with 0 = always", default=0.0, required=False)
         return parser
 
     def _apply_args(self, ns: argparse.Namespace):
