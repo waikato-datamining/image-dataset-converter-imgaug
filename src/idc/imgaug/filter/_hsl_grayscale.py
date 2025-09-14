@@ -34,7 +34,7 @@ class HSLGrayScale(BaseFilter):
         :type threshold: float
         :param from_factor: the start of the factor range to apply to the L channel to darken or lighten the image (<1: darker, >1: lighter)
         :type from_factor: float
-        :param to_factor: he end of the factor range to apply to the L channel to darken or lighten the image (<1: darker, >1: lighter)
+        :param to_factor: the end of the factor range to apply to the L channel to darken or lighten the image (<1: darker, >1: lighter)
         :type to_factor: float
         :param logger_name: the name to use for the logger
         :type logger_name: str
