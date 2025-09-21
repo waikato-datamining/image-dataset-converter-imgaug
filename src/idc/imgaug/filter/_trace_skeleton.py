@@ -1,14 +1,15 @@
 import argparse
-from typing import List, Tuple
+from typing import List
 
 import numpy as np
-
 from wai.common.adams.imaging.locateobjects import LocatedObject, LocatedObjects
 from wai.common.geometry import Polygon, Point
 from wai.logging import LOGGING_WARNING
+
+from idc.api import ObjectDetectionData, ImageSegmentationData, ImageData, APPLY_TO_IMAGE, APPLY_TO_ANNOTATIONS, \
+    APPLY_TO_BOTH, add_apply_to_param, image_to_bytesio, LABEL_KEY, REQUIRED_FORMAT_BINARY
+from idc.filter import RequiredFormatFilter, OUTPUT_FORMAT_ASIS, add_output_format, array_to_output_format
 from kasperl.api import make_list, flatten_list, safe_deepcopy
-from idc.api import ObjectDetectionData, ImageSegmentationData, ImageData, APPLY_TO_IMAGE, APPLY_TO_ANNOTATIONS, APPLY_TO_BOTH, add_apply_to_param, image_to_bytesio, LABEL_KEY
-from idc.filter import RequiredFormatFilter, REQUIRED_FORMAT_BINARY, OUTPUT_FORMAT_ASIS, add_output_format, array_to_output_format
 from ._thinning_utils import thinning, traceSkeleton
 
 

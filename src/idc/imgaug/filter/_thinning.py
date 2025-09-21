@@ -2,8 +2,8 @@ from typing import List
 
 import numpy as np
 
-from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData
-from idc.filter import ImageAndAnnotationFilter, REQUIRED_FORMAT_BINARY
+from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, REQUIRED_FORMAT_BINARY
+from idc.filter import ImageAndAnnotationFilter
 from ._thinning_utils import thinning
 
 

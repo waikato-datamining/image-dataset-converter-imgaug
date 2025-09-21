@@ -7,10 +7,10 @@ import numpy as np
 from wai.common.adams.imaging.locateobjects import LocatedObjects, LocatedObject
 from wai.logging import LOGGING_WARNING
 
-from idc.filter import RequiredFormatFilter, REQUIRED_FORMAT_GRAYSCALE
+from idc.filter import RequiredFormatFilter
 from kasperl.api import make_list, flatten_list, safe_deepcopy
 from idc.api import ImageData, ObjectDetectionData, ImageSegmentationData, add_apply_to_param, APPLY_TO_IMAGE, \
-    APPLY_TO_BOTH, APPLY_TO_ANNOTATIONS, LABEL_KEY, DEFAULT_LABEL
+    APPLY_TO_BOTH, APPLY_TO_ANNOTATIONS, LABEL_KEY, DEFAULT_LABEL, REQUIRED_FORMAT_GRAYSCALE
 
 
 class SimpleBlobDetector(RequiredFormatFilter):
