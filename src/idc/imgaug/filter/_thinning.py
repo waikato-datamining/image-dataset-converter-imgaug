@@ -58,10 +58,12 @@ class Thinning(ImageAndAnnotationFilter):
         """
         return REQUIRED_FORMAT_BINARY
 
-    def _apply_filter(self, array: np.ndarray) -> np.ndarray:
+    def _apply_filter(self, source: str, array: np.ndarray) -> np.ndarray:
         """
-        Applies the morphological filter to the image and returns the numpy array.
+        Applies the filter to the image and returns the numpy array.
 
+        :param source: whether image or layer
+        :type source: str
         :param array: the image the filter to apply to
         :type array: np.ndarray
         :return: the filtered image
