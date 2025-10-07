@@ -12,6 +12,7 @@ Changelog
 - added `fast-line-detection`/`hough-lines-prob` filters for detecting lines in images and adding
   them as polygon object detection annotations
 - added `simple-blob-detector` filter which adds detected blobs as bounding box object detections using OpenCV
+- added `aruco-detector` filter which adds the detected markers to the meta-data
 
 
 0.0.10 (2025-07-11)
