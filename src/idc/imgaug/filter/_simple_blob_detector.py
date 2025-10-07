@@ -205,7 +205,6 @@ class SimpleBlobDetector(RequiredFormatFilter):
         for item in make_list(data):
             ann = LocatedObjects()
             params = cv2.SimpleBlobDetector_Params()
-            print(dir(params))
             if self.blob_color is not None:
                 params.blobColor = self.blob_color
             if self.filter_by_area is not None:
