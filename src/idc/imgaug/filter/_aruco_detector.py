@@ -197,6 +197,7 @@ class ArucoDetector(RequiredFormatFilter):
                 for marker_corners, marker_id in zip(all_corners, ids):
                     marker_corners = marker_corners.squeeze()
                     marker_id = marker_id.squeeze()
+                    self.logger().info("marker id: %s" % str(marker_id))
                     meta[self.prefix + str(marker_id) + "-id"] = str(marker_id)
                     meta[self.prefix + str(marker_id) + "-topleft.x"] = int(marker_corners[0][0])
                     meta[self.prefix + str(marker_id) + "-topleft.y"] = int(marker_corners[0][1])
