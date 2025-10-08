@@ -43,6 +43,7 @@ setup(
     author_email='fracpete@waikato.ac.nz',
     entry_points={
         "console_scripts": [
+            "idc-generate-aruco=idc.imgaug.tool.generate_aruco:sys_main",
             "idc-generate-regions=idc.imgaug.tool.generate_regions:sys_main",
             "idc-combine-sub-images=idc.imgaug.tool.combine_sub_images:sys_main",
         ],

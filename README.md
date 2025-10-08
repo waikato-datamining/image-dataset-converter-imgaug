@@ -18,6 +18,29 @@ pip install git+https://github.com/waikato-datamining/image-dataset-converter-im
 
 ## Tools
 
+### Generate AruCo markers
+
+```
+usage: idc-generate-aruco [-h] [-s SIZE] -i ARUCO_ID
+                          [-t {DICT_4X4_50,DICT_4X4_100,DICT_4X4_250,DICT_4X4_1000,DICT_5X5_50,DICT_5X5_100,DICT_5X5_250,DICT_5X5_1000,DICT_6X6_50,DICT_6X6_100,DICT_6X6_250,DICT_6X6_1000,DICT_7X7_50,DICT_7X7_100,DICT_7X7_250,DICT_7X7_1000}]
+                          [-o FILE] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
+
+Tool for generating ArUco code marker images.
+
+options:
+  -h, --help            show this help message and exit
+  -s SIZE, --size SIZE  The size of the image (width and height). (default:
+                        200)
+  -i ARUCO_ID, --aruco_id ARUCO_ID
+                        The ID to encode. (default: None)
+  -t {DICT_4X4_50,DICT_4X4_100,DICT_4X4_250,DICT_4X4_1000,DICT_5X5_50,DICT_5X5_100,DICT_5X5_250,DICT_5X5_1000,DICT_6X6_50,DICT_6X6_100,DICT_6X6_250,DICT_6X6_1000,DICT_7X7_50,DICT_7X7_100,DICT_7X7_250,DICT_7X7_1000}, --aruco_type {DICT_4X4_50,DICT_4X4_100,DICT_4X4_250,DICT_4X4_1000,DICT_5X5_50,DICT_5X5_100,DICT_5X5_250,DICT_5X5_1000,DICT_6X6_50,DICT_6X6_100,DICT_6X6_250,DICT_6X6_1000,DICT_7X7_50,DICT_7X7_100,DICT_7X7_250,DICT_7X7_1000}
+                        The type of markers to detect. (default: DICT_6X6_250)
+  -o FILE, --output FILE
+                        The file to save the image in. (default: ./marker.png)
+  -l {DEBUG,INFO,WARNING,ERROR,CRITICAL}, --logging_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}
+                        The logging level to use. (default: WARN)
+```
+
 ### Generate regions
 
 ```

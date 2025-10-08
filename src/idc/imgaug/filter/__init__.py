@@ -1,4 +1,4 @@
-from ._aruco_detector import ArucoDetector, DEFAULT_ARUCO_TYPE, ARUCO_TYPES
+from ._aruco_detector import ArucoDetector, DEFAULT_ARUCO_TYPE, ARUCO_TYPES, generate_aruco
 from ._augment_util import augment_image
 from ._base_filter import BaseFilter
 from ._base_image_augmentation import BaseImageAugmentation

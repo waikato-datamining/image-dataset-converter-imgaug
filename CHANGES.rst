@@ -13,6 +13,7 @@ Changelog
   them as polygon object detection annotations
 - added `simple-blob-detector` filter which adds detected blobs as bounding box object detections using OpenCV
 - added `aruco-detector` filter which adds the detected markers to the meta-data
+- added `idc-generate-aruco` tool
 
 
 0.0.10 (2025-07-11)

@@ -1,4 +1,5 @@
 import argparse
+import logging
 from typing import List
 
 import cv2
@@ -31,6 +32,34 @@ ARUCO_TYPES = {
     "DICT_7X7_250": cv2.aruco.DICT_7X7_250,
     "DICT_7X7_1000": cv2.aruco.DICT_7X7_1000,
 }
+
+
+def generate_aruco(size: int, aruco_id: int, aruco_type: str, output_file: str, logger: logging.Logger = None) -> bool:
+    """
+    Generates an AruCo code marker image.
+
+    :param size: the size of the image
+    :type size: int
+    :param aruco_id: the ID to encode
+    :type aruco_id: int
+    :param aruco_type: the type of marker to generate
+    :type aruco_type: str
+    :param output_file: the file to store the generated marker in
+    :type output_file: str
+    :param logger: the optional logger instance to use
+    :type logger: logging.Logger
+    :return: whether image was successfully written
+    :rtype: bool
+    """
+    if logger is not None:
+        logger.info("Getting dictionary: %s" % aruco_type)
+    aruco_dict = cv2.aruco.getPredefinedDictionary(ARUCO_TYPES[aruco_type])
+    if logger is not None:
+        logger.info("Generating marker for ID: %d" % aruco_id)
+    marker_image = cv2.aruco.generateImageMarker(aruco_dict, aruco_id, size)
+    if logger is not None:
+        logger.info("Writing marker to: %s" % output_file)
+    return cv2.imwrite(output_file, marker_image)
 
 
 class ArucoDetector(RequiredFormatFilter):
