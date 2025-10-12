@@ -188,7 +188,11 @@ class ArucoDetector(RequiredFormatFilter):
 
             # detect markers
             all_corners, ids, rejected = detector.detectMarkers(gray)
-            self.logger().info("# markers detected: %d" % len(ids))
+            if ids is None:
+                self.logger().info("No markers detected!")
+                continue
+            else:
+                self.logger().info("# markers detected: %d" % len(ids))
 
             # store results
             meta = None
