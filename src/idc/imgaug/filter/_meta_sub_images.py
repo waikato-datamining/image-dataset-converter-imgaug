@@ -2,11 +2,12 @@ import argparse
 from typing import List
 
 from wai.logging import LOGGING_WARNING
-from seppl import Initializable, init_initializable
+from seppl import Initializable, init_initializable, Plugin, split_args
 from seppl.io import BatchFilter
-from kasperl.api import make_list, flatten_list, parse_filter
+from kasperl.api import make_list, flatten_list, PIPELINE_FORMATS, PIPELINE_FORMAT_CMDLINE, load_pipeline
 from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, merge_polygons
 from idc.registry import available_filters
+from seppl.io import MultiFilter
 from idc.imgaug.filter._sub_images_utils import REGION_SORTING_NONE, REGION_SORTING, PLACEHOLDERS, DEFAULT_SUFFIX, \
     parse_regions, extract_regions, generate_regions, regions_to_string, new_from_template, transfer_region, \
     prune_annotations
@@ -22,7 +23,8 @@ class MetaSubImages(BatchFilter):
                  num_rows: int = None, num_cols: int = None, row_height: int = None, col_width: int = None,
                  overlap_right: int = None, overlap_bottom: int = None,
                  include_partial: bool = False, suppress_empty: bool = False, suffix: str = DEFAULT_SUFFIX,
-                 base_filter: str = None, rebuild_image: bool = False, merge_adjacent_polygons: bool = False,
+                 base_filter: str = None, base_filter_format: str = None,
+                 rebuild_image: bool = False, merge_adjacent_polygons: bool = False,
                  pad_width: int = None, pad_height: int = None,
                  logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
@@ -46,8 +48,10 @@ class MetaSubImages(BatchFilter):
         :type suppress_empty: bool
         :param suffix: the suffix pattern to use for the generated sub-images (with placeholders)
         :type suffix: str
-        :param base_filter: the base filter command-line to pass the sub-images through
+        :param base_filter: the sub-flow with the filter(s) to execute
         :type base_filter: str
+        :param base_filter_format: the format the sub-flow is in
+        :type base_filter_format: str
         :param rebuild_image: whether to rebuild the image from the filtered sub-images rather than using the input image
         :type rebuild_image: bool
         :param merge_adjacent_polygons: whether to merge adjacent polygons
@@ -74,6 +78,7 @@ class MetaSubImages(BatchFilter):
         self.suppress_empty = suppress_empty
         self.suffix = suffix
         self.base_filter = base_filter
+        self.base_filter_format = base_filter_format
         self.rebuild_image = rebuild_image
         self.merge_adjacent_polygons = merge_adjacent_polygons
         self.pad_width = pad_width
@@ -137,7 +142,8 @@ class MetaSubImages(BatchFilter):
         parser.add_argument("-p", "--include_partial", action="store_true", help="Whether to include only annotations that fit fully into a region or also partial ones", required=False)
         parser.add_argument("-e", "--suppress_empty", action="store_true", help="Suppresses sub-images that have no annotations", required=False)
         parser.add_argument("-S", "--suffix", type=str, default=DEFAULT_SUFFIX, help="The suffix pattern to use for the generated sub-images, available placeholders: " + "|".join(PLACEHOLDERS), required=False)
-        parser.add_argument("-b", "--base_filter", type=str, default="passthrough", help="The base filter to pass the sub-images through", required=False)
+        parser.add_argument("-b", "--base_filter", type=str, default="passthrough", help="The subflow with filter(s) to execute.")
+        parser.add_argument("-B", "--base_filter_format", choices=PIPELINE_FORMATS, default=PIPELINE_FORMAT_CMDLINE, help="The format of the pipeline.")
         parser.add_argument("-R", "--rebuild_image", action="store_true", help="Rebuilds the image from the filtered sub-images rather than using the input image.", required=False)
         parser.add_argument("-m", "--merge_adjacent_polygons", action="store_true", help="Whether to merge adjacent polygons (object detection only).", required=False)
         parser.add_argument("--pad_width", type=int, default=None, help="The width to pad the sub-images to (on the right).", required=False)
@@ -164,10 +170,28 @@ class MetaSubImages(BatchFilter):
         self.suppress_empty = ns.suppress_empty
         self.suffix = ns.suffix
         self.base_filter = ns.base_filter
+        self.base_filter_format = ns.base_filter_format
         self.rebuild_image = ns.rebuild_image
         self.merge_adjacent_polygons = ns.merge_adjacent_polygons
         self.pad_width = ns.pad_width
         self.pad_height = ns.pad_height
+
+    def _parse_base_filter(self) -> List[Plugin]:
+        """
+        Parses the command-line and returns the list of plugins it represents.
+        Raises an exception in case of an invalid sub-flow.
+
+        :return: the list of plugins
+        :rtype: list
+        """
+        from seppl import args_to_objects
+
+        # split command-line into valid plugin subsets
+        valid = dict()
+        valid.update(available_filters())
+        pipeline = load_pipeline(self.base_filter, self.base_filter_format, logger=self.logger())
+        args = split_args(pipeline, list(valid.keys()))
+        return args_to_objects(args, valid, allow_global_options=False)
 
     def initialize(self):
         """
@@ -203,8 +227,20 @@ class MetaSubImages(BatchFilter):
         if self.overlap_bottom is None:
             self.overlap_bottom = 0
 
-        # configure base filter
-        self._base_filter = parse_filter(self.base_filter, available_filters())
+        # configure sub-flow
+        if self.base_filter is None:
+            self.base_filter = "passthrough"
+        self._base_filter = None
+        filters = []
+        for plugin in self._parse_base_filter():
+            if isinstance(plugin, BatchFilter):
+                filters.append(plugin)
+        if len(filters) == 1:
+            self._base_filter = filters[0]
+        elif len(filters) > 1:
+            self._base_filter = MultiFilter(filters=filters)
+        if self._base_filter is None:
+            raise Exception("No valid base filter defined?")
         self._base_filter.session = self.session
         if isinstance(self._base_filter, Initializable):
             init_initializable(self._base_filter, "filter", raise_again=True)

@@ -14,6 +14,7 @@ Changelog
 - added `simple-blob-detector` filter which adds detected blobs as bounding box object detections using OpenCV
 - added `aruco-detector` filter which adds the detected markers to the meta-data
 - added `idc-generate-aruco` tool
+- the `meta-sub-images` filter can load the base filter now from a pipeline file as well
 
 
 0.0.10 (2025-07-11)

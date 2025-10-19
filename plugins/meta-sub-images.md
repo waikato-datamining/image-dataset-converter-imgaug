@@ -13,8 +13,8 @@ usage: meta-sub-images [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
                        [--overlap_right OVERLAP_RIGHT]
                        [--overlap_bottom OVERLAP_BOTTOM]
                        [-s {none,x-then-y,y-then-x}] [-p] [-e] [-S SUFFIX]
-                       [-b BASE_FILTER] [-R] [-m] [--pad_width PAD_WIDTH]
-                       [--pad_height PAD_HEIGHT]
+                       [-b BASE_FILTER] [-B {cmdline,file}] [-R] [-m]
+                       [--pad_width PAD_WIDTH] [--pad_height PAD_HEIGHT]
 
 Extracts sub-images (incl their annotations) from the images coming through,
 using the defined regions or #rows/cols, and passes them through the base
@@ -61,8 +61,10 @@ options:
                         {X}|{Y}|{W}|{H}|{X0}|{Y0}|{X1}|{Y1}|{INDEX} (default:
                         -{INDEX})
   -b BASE_FILTER, --base_filter BASE_FILTER
-                        The base filter to pass the sub-images through
-                        (default: passthrough)
+                        The subflow with filter(s) to execute. (default:
+                        passthrough)
+  -B {cmdline,file}, --base_filter_format {cmdline,file}
+                        The format of the pipeline. (default: cmdline)
   -R, --rebuild_image   Rebuilds the image from the filtered sub-images rather
                         than using the input image. (default: False)
   -m, --merge_adjacent_polygons
