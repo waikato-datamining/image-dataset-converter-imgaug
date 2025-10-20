@@ -15,6 +15,7 @@ Changelog
 - added `aruco-detector` filter which adds the detected markers to the meta-data
 - added `idc-generate-aruco` tool
 - the `meta-sub-images` filter can load the base filter now from a pipeline file as well
+- the `augment_image` utility method now converts numpy types back to floats for object detection bboxes and polygons
 
 
 0.0.10 (2025-07-11)

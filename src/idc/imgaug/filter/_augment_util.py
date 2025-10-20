@@ -92,10 +92,10 @@ def augment_image(item: ImageData, pipeline, image_name: str = None) -> ImageDat
             bbox = bbox.clip_out_of_image(image_aug)
             # update located object
             obj_aug = annotation[i].get_clone()
-            obj_aug.x = bbox.x1
-            obj_aug.y = bbox.y1
-            obj_aug.width = bbox.x2 - bbox.x1 + 1
-            obj_aug.height = bbox.y2 - bbox.y1 + 1
+            obj_aug.x = float(bbox.x1)
+            obj_aug.y = float(bbox.y1)
+            obj_aug.width = float(bbox.x2 - bbox.x1 + 1)
+            obj_aug.height = float(bbox.y2 - bbox.y1 + 1)
             objs_aug.append(obj_aug)
             annotation_new = LocatedObjects(objs_aug)
     elif polys_aug is not None:
@@ -112,10 +112,10 @@ def augment_image(item: ImageData, pipeline, image_name: str = None) -> ImageDat
                 # update located object
                 obj_aug = annotation[i].get_clone()
                 bbox = p.to_bounding_box()
-                obj_aug.x = bbox.x1
-                obj_aug.y = bbox.y1
-                obj_aug.width = bbox.x2 - bbox.x1 + 1
-                obj_aug.height = bbox.y2 - bbox.y1 + 1
+                obj_aug.x = float(bbox.x1)
+                obj_aug.y = float(bbox.y1)
+                obj_aug.width = float(bbox.x2 - bbox.x1 + 1)
+                obj_aug.height = float(bbox.y2 - bbox.y1 + 1)
                 points = []
                 for row in p.coords:
                     points.append(WaiPoint((int(row[0])), int(row[1])))
