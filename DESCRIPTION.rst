@@ -1,4 +1,4 @@
-Image augmentation extension for the image-dataset-converter library.
+Image augmentation extension for the image-dataset-converter library (https://github.com/waikato-datamining/image-dataset-converter).
 
 Examples can be found here:
 
