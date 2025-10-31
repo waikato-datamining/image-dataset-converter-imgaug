@@ -38,7 +38,7 @@ setup(
         "simple_mask_utils==0.0.1",
         "opencv-contrib-python",
     ],
-    version="0.0.10",
+    version="0.1.0",
     author='Peter Reutemann',
     author_email='fracpete@waikato.ac.nz',
     entry_points={
