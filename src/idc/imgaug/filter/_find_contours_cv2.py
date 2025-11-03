@@ -3,14 +3,12 @@ from typing import List
 
 import cv2
 import numpy as np
-from seppl.io import BatchFilter
-from shapely import Polygon
 from wai.common.adams.imaging.locateobjects import LocatedObjects
 from wai.logging import LOGGING_WARNING
 
-from idc.api import ImageData, ObjectDetectionData, ImageSegmentationData, ensure_binary, shapely_to_locatedobject
+from idc.api import ImageData, ObjectDetectionData, ImageSegmentationData, ensure_binary, contours_to_objdet
 from kasperl.api import make_list, flatten_list, safe_deepcopy
-
+from seppl.io import BatchFilter
 
 MIN_RECT_WIDTH = "min_rect_width"
 MIN_RECT_HEIGHT = "min_rect_height"
@@ -121,56 +119,6 @@ class FindContoursCV2(BatchFilter):
         if self.calculate_min_rect is None:
             self.calculate_min_rect = False
 
-    def _check_dimension(self, dim) -> bool:
-        """
-        Checks whether the dimension fits the min/max size.
-
-        :param dim: the width/height to check
-        :return: True if within specified min/max
-        :rtype: bool
-        """
-        if self.min_size is not None:
-            if dim < self.min_size:
-                return False
-        if self.max_size is not None:
-            if dim > self.max_size:
-                return False
-        return True
-
-    def _add_contours(self, contours, ann: LocatedObjects, label: str):
-        """
-        Processes the contours and adds the polygons to the annotations.
-
-        :param contours: the contours to process
-        :param ann: the annotations to append
-        :type ann: LocatedObjects
-        :param label: the label to use
-        :type label: str
-        """
-        for i in range(len(contours)):
-            if len(contours[i]) > 2:
-                polygon = Polygon(np.squeeze(contours[i]))
-                # Convert invalid polygon to valid
-                if not polygon.is_valid:
-                    polygon = polygon.buffer(0)
-                if polygon.area == 0.0:
-                    continue
-                lobj = shapely_to_locatedobject(polygon, label=label)
-                if self.min_size is not None:
-                    if not self._check_dimension(lobj.width) or not self._check_dimension(lobj.height):
-                        continue
-                if self.max_size is not None:
-                    if not self._check_dimension(lobj.width) or not self._check_dimension(lobj.height):
-                        continue
-                if self.calculate_min_rect:
-                    rect = cv2.minAreaRect(contours[i])
-                    (_, _), (w, h), angle = rect
-                    if not self._check_dimension(w) or not self._check_dimension(h):
-                        continue
-                    lobj.metadata[MIN_RECT_WIDTH] = w
-                    lobj.metadata[MIN_RECT_HEIGHT] = h
-                ann.append(lobj)
-
     def _do_process(self, data):
         """
         Processes the data record(s).
@@ -191,12 +139,14 @@ class FindContoursCV2(BatchFilter):
                     layer = np.where(layer > 0, 1, 0)
                     contours, _ = cv2.findContours(np.array(layer).astype(np.uint8), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
                     self.logger().info("%s - # of contours: %s" % (label, str(len(contours))))
-                    self._add_contours(contours, ann, label)
+                    contours_to_objdet(contours, ann, label, min_size=self.min_size, max_size=self.max_size,
+                                       calculate_min_rect=self.calculate_min_rect)
             else:
                 binary = ensure_binary(item.image, self.logger())
                 contours, _ = cv2.findContours(np.array(binary).astype(np.uint8), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
                 self.logger().info("# of contours: %s" % str(len(contours)))
-                self._add_contours(contours, ann, self.label)
+                contours_to_objdet(contours, ann, self.label, min_size=self.min_size, max_size=self.max_size,
+                                   calculate_min_rect=self.calculate_min_rect)
 
             self.logger().info("# of polygons added: %s" % str(len(ann)))
             item_new = ObjectDetectionData(source=item.source, image_name=item.image_name,

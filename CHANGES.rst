@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.1.1 (????-??-??)
+------------------
+
+- `find-contours-cv2` filter now uses `contours_to_objdet` API method
+
+
 0.1.0 (2025-10-31)
 -------------------
 
