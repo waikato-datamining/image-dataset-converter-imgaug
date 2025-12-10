@@ -11,7 +11,7 @@ from idc.imgaug.filter._sub_images_utils import extract_regions
 
 class CropToLabel(BatchFilter):
     """
-    Resizes all images according to the specified width/height. When only resizing one dimension, use 'keep-aspect-ratio' for the other one to keep the aspect ratio intact.
+    Crops an image to the bbox with the specified label.
     """
 
     def __init__(self, region_label: str = None, keep_missing: bool = False,
