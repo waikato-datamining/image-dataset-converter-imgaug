@@ -5,8 +5,9 @@ from typing import List
 import cv2
 import numpy as np
 from wai.logging import LOGGING_WARNING
+from wai.common.adams.imaging.locateobjects import LocatedObject, LocatedObjects
 
-from idc.api import ImageData, REQUIRED_FORMAT_GRAYSCALE, ensure_grayscale
+from idc.api import ImageData, REQUIRED_FORMAT_GRAYSCALE, ensure_grayscale, ObjectDetectionData, LABEL_KEY
 from idc.filter import RequiredFormatFilter
 from kasperl.api import make_list, flatten_list
 
@@ -196,6 +197,7 @@ class ArucoDetector(RequiredFormatFilter):
 
             # store results
             meta = None
+            objs = []
             if len(ids) > 0:
                 meta = dict()
                 for marker_corners, marker_id in zip(all_corners, ids):
@@ -212,12 +214,27 @@ class ArucoDetector(RequiredFormatFilter):
                     meta[self.prefix + str(marker_id) + "-bottomleft.x"] = int(marker_corners[3][0])
                     meta[self.prefix + str(marker_id) + "-bottomleft.y"] = int(marker_corners[3][1])
 
+                    if isinstance(item, ObjectDetectionData):
+                        xs = [int(marker_corners[0][0]), int(marker_corners[1][0]), int(marker_corners[2][0]), int(marker_corners[3][0])]
+                        ys = [int(marker_corners[0][1]), int(marker_corners[1][1]), int(marker_corners[2][1]), int(marker_corners[3][1])]
+                        left = min(xs)
+                        right = max(xs)
+                        top = min(ys)
+                        bottom = max(ys)
+                        obj = LocatedObject(left, top, right - left + 1, bottom - top + 1)
+                        obj.metadata[LABEL_KEY] = str(marker_id)
+                        objs.append(obj)
+
             item_new = item.duplicate()
             if meta is not None:
                 if not item_new.has_metadata():
                     item_new.set_metadata(meta)
                 else:
                     item_new.get_metadata().extend(meta)
+            if len(objs) > 0:
+                if not item_new.has_annotation():
+                    item_new.annotation = LocatedObjects()
+                item_new.annotation.extend(objs)
 
             result.append(item_new)
 
