@@ -150,7 +150,7 @@ def extract_regions(item: ImageData, regions_lobj: List[LocatedObject], regions_
 
     pil = item.image
     for region_index, region_xyxy in enumerate(regions_xyxy):
-        logger.info("Applying region %d :%s" % (region_index, str(region_xyxy)))
+        logger.info("Applying region %d: %s" % (region_index, str(region_xyxy)))
 
         # crop image
         x0, y0, x1, y1 = region_xyxy
