@@ -476,7 +476,7 @@ def generate_regions(width: int, height: int,
         for row in range(num_rows):
             y = row * section_height // num_rows + margin_top
             if (row == num_rows - 1) and not fixed_size:
-                h = section_height - y
+                h = section_height - (y - margin_top)
             else:
                 h = section_height // num_rows
             if row < num_rows - 1:
@@ -484,7 +484,7 @@ def generate_regions(width: int, height: int,
             for col in range(num_cols):
                 x = col * section_width // num_cols + margin_left
                 if (col == num_cols - 1) and not fixed_size:
-                    w = section_width - x
+                    w = section_width - (x - margin_left)
                 else:
                     w = section_width // num_cols
                 if col < num_cols - 1:

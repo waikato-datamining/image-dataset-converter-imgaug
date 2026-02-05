@@ -7,6 +7,7 @@ Changelog
 - `find-contours-cv2` filter now uses `contours_to_objdet` API method
 - `aruco-detector` stores the detections in the annotations as well, in case the data passing through
   is of the object detection data domain
+- fixed margin handling in `idc-generate-regions` tool when not using fixed sizes
 
 
 0.1.0 (2025-10-31)
