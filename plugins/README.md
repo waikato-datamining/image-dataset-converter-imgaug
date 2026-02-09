@@ -15,6 +15,7 @@
 * [hsl-grayscale](hsl-grayscale.md)
 * [linear-contrast](linear-contrast.md)
 * [meta-sub-images](meta-sub-images.md)
+* [overlay-regions](overlay-regions.md)
 * [resize](resize.md)
 * [roi-images](roi-images.md)
 * [rotate](rotate.md)

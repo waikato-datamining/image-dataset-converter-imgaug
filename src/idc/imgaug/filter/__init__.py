@@ -16,6 +16,7 @@ from ._hsl_grayscale import HSLGrayScale
 from ._hough_lines_prob import HoughLinesProbabilistic
 from ._linear_contrast import LinearContrast
 from ._meta_sub_images import MetaSubImages
+from ._overlay_regions import OverlayRegions
 from ._resize import Resize
 from ._roi_images import RegionOfInterestImages
 from ._rotate import Rotate
