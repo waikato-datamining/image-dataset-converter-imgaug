@@ -147,7 +147,8 @@ class ArucoDetector(RequiredFormatFilter):
                 self.logger().info("# markers detected: %d" % len(ids))
 
             # store results
-            meta = None
+            meta = dict()
+            meta[self.prefix + "marker_count"] = len(ids)
             objs = []
             if len(ids) > 0:
                 meta = dict()
@@ -177,11 +178,10 @@ class ArucoDetector(RequiredFormatFilter):
                         objs.append(obj)
 
             item_new = item.duplicate()
-            if meta is not None:
-                if not item_new.has_metadata():
-                    item_new.set_metadata(meta)
-                else:
-                    item_new.get_metadata().extend(meta)
+            if not item_new.has_metadata():
+                item_new.set_metadata(meta)
+            else:
+                item_new.get_metadata().extend(meta)
             if len(objs) > 0:
                 if not item_new.has_annotation():
                     item_new.annotation = LocatedObjects()
