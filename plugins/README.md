@@ -1,5 +1,6 @@
 # imgaug plugins
 ## Filters
+* [aruco-crop](aruco-crop.md)
 * [aruco-detector](aruco-detector.md)
 * [change-grayscale](change-grayscale.md)
 * [clip-grayscale](clip-grayscale.md)

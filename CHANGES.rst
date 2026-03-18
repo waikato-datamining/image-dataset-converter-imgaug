@@ -9,6 +9,7 @@ Changelog
   is of the object detection data domain
 - fixed margin handling in `idc-generate-regions` tool when not using fixed sizes
 - added `overlay-regions` filter to visualize, e.g., regions used by `sub-images` or `meta-sub-images`
+- added `aruco-crop` filter that uses the locations of ArUco markers to either crop within our outside the markers
 
 
 0.1.0 (2025-10-31)
