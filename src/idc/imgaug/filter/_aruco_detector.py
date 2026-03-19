@@ -151,7 +151,6 @@ class ArucoDetector(RequiredFormatFilter):
             meta[self.prefix + "marker_count"] = len(ids)
             objs = []
             if len(ids) > 0:
-                meta = dict()
                 for marker_corners, marker_id in zip(all_corners, ids):
                     marker_corners = marker_corners.squeeze()
                     marker_id = marker_id.squeeze()
