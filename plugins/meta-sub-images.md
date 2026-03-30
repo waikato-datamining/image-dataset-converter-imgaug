@@ -43,10 +43,12 @@ options:
                         The width of columns. (default: None)
   --overlap_right OVERLAP_RIGHT
                         The overlap between two images (on the right of the
-                        left-most image), if no regions defined. (default: 0)
+                        left-most image), if no regions defined, gets added to
+                        the sub-image width. (default: 0)
   --overlap_bottom OVERLAP_BOTTOM
                         The overlap between two images (on the bottom of the
-                        top-most image), if no regions defined. (default: 0)
+                        top-most image), if no regions defined, gets added to
+                        the sub-image height. (default: 0)
   -s {none,x-then-y,y-then-x}, --region_sorting {none,x-then-y,y-then-x}
                         How to sort the supplied region definitions (default:
                         none)
