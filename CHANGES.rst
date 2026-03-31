@@ -12,6 +12,7 @@ Changelog
 - added `aruco-crop` filter that uses the locations of ArUco markers to either crop within our outside the markers
 - added parameter `--partial_sub_images` to `meta-sub-images` and `sub-images` to allow inclusion of
   images that don't have the required --col_width/--row_height
+- added `aruco-autorotate` filter for correcting rotation of images in 90deg increments
 
 
 0.1.0 (2025-10-31)

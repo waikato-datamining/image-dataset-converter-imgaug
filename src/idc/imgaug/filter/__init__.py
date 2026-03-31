@@ -1,5 +1,6 @@
 from ._aruco import ARUCO_TYPES, DEFAULT_ARUCO_TYPE, generate_aruco
 from ._aruco_crop import ArucoCrop, ARUCO_CROP_TYPES, ARUCO_CROP_TYPE_INSIDE, ARUCO_CROP_TYPE_OUTSIDE, DEFAULT_CROP_TYPE
+from ._aruco_autorotate import ArucoAutoRotate
 from ._aruco_detector import ArucoDetector
 from ._augment_util import augment_image
 from ._base_filter import BaseFilter
