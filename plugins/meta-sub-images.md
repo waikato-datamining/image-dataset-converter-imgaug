@@ -10,7 +10,7 @@ usage: meta-sub-images [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
                        [-N LOGGER_NAME] [--skip] [-r [REGIONS ...]]
                        [--num_rows NUM_ROWS] [--num_cols NUM_COLS]
                        [--row_height ROW_HEIGHT] [--col_width COL_WIDTH]
-                       [--overlap_right OVERLAP_RIGHT]
+                       [--partial_sub_images] [--overlap_right OVERLAP_RIGHT]
                        [--overlap_bottom OVERLAP_BOTTOM]
                        [-s {none,x-then-y,y-then-x}] [-p] [-e] [-S SUFFIX]
                        [-b BASE_FILTER] [-B {cmdline,file}] [-R] [-m]
@@ -41,6 +41,8 @@ options:
                         The height of rows. (default: None)
   --col_width COL_WIDTH
                         The width of columns. (default: None)
+  --partial_sub_images  Whether to use sub-images that don't have the required
+                        --col_width/--row_height (default: False)
   --overlap_right OVERLAP_RIGHT
                         The overlap between two images (on the right of the
                         left-most image), if no regions defined, gets added to

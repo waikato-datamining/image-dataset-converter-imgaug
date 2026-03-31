@@ -10,6 +10,8 @@ Changelog
 - fixed margin handling in `idc-generate-regions` tool when not using fixed sizes
 - added `overlay-regions` filter to visualize, e.g., regions used by `sub-images` or `meta-sub-images`
 - added `aruco-crop` filter that uses the locations of ArUco markers to either crop within our outside the markers
+- added parameter `--partial_sub_images` to `meta-sub-images` and `sub-images` to allow inclusion of
+  images that don't have the required --col_width/--row_height
 
 
 0.1.0 (2025-10-31)

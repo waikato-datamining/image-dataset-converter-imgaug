@@ -21,7 +21,7 @@ class MetaSubImages(BatchFilter):
 
     def __init__(self, regions: List[str] = None, region_sorting: str = REGION_SORTING_NONE,
                  num_rows: int = None, num_cols: int = None, row_height: int = None, col_width: int = None,
-                 overlap_right: int = None, overlap_bottom: int = None,
+                 overlap_right: int = None, overlap_bottom: int = None, partial_sub_images: bool = False,
                  include_partial: bool = False, suppress_empty: bool = False, suffix: str = DEFAULT_SUFFIX,
                  base_filter: str = None, base_filter_format: str = None,
                  rebuild_image: bool = False, merge_adjacent_polygons: bool = False,
@@ -42,6 +42,8 @@ class MetaSubImages(BatchFilter):
         :type row_height: int
         :param col_width: the width of columns
         :type col_width: int
+        :param partial_sub_images: whether to use sub-images that don't have required col_width/row_height
+        :type partial_sub_images: bool
         :param include_partial: whether to include only annotations that fit fully into a region or also partial ones
         :type include_partial: bool
         :param suppress_empty: suppresses sub-images that have no annotations (object detection)
@@ -72,6 +74,7 @@ class MetaSubImages(BatchFilter):
         self.num_cols = num_cols
         self.row_height = row_height
         self.col_width = col_width
+        self.partial_sub_images = partial_sub_images
         self.overlap_right = overlap_right
         self.overlap_bottom = overlap_bottom
         self.include_partial = include_partial
@@ -136,6 +139,7 @@ class MetaSubImages(BatchFilter):
         parser.add_argument("--num_cols", type=int, help="The number of columns, if no regions defined.", default=None, required=False)
         parser.add_argument("--row_height", type=int, help="The height of rows.", default=None, required=False)
         parser.add_argument("--col_width", type=int, help="The width of columns.", default=None, required=False)
+        parser.add_argument("--partial_sub_images", action="store_true", help="Whether to use sub-images that don't have the required --col_width/--row_height", required=False)
         parser.add_argument("--overlap_right", type=int, help="The overlap between two images (on the right of the left-most image), if no regions defined, gets added to the sub-image width.", default=0, required=False)
         parser.add_argument("--overlap_bottom", type=int, help="The overlap between two images (on the bottom of the top-most image), if no regions defined, gets added to the sub-image height.", default=0, required=False)
         parser.add_argument("-s", "--region_sorting", choices=REGION_SORTING, default=REGION_SORTING_NONE, help="How to sort the supplied region definitions", required=False)
@@ -164,6 +168,7 @@ class MetaSubImages(BatchFilter):
         self.num_cols = ns.num_cols
         self.row_height = ns.row_height
         self.col_width = ns.col_width
+        self.partial_sub_images = ns.partial_sub_images
         self.overlap_right = ns.overlap_right
         self.overlap_bottom = ns.overlap_bottom
         self.include_partial = ns.include_partial
@@ -212,6 +217,8 @@ class MetaSubImages(BatchFilter):
             raise Exception("Neither regions nor #rows/cols nor row height/col width specified!")
         if self.region_sorting is None:
             self.region_sorting = REGION_SORTING_NONE
+        if self.partial_sub_images is None:
+            self.partial_sub_images = False
         if self.include_partial is None:
             self.include_partial = False
         if self.suppress_empty is None:
@@ -274,7 +281,7 @@ class MetaSubImages(BatchFilter):
                 regions = generate_regions(item.image_width, item.image_height,
                                            row_height=self.row_height, col_width=self.col_width,
                                            overlap_right=self.overlap_right, overlap_bottom=self.overlap_bottom,
-                                           logger=self.logger())
+                                           partial=self.partial_sub_images, logger=self.logger())
                 regions_str = regions_to_string(regions, logger=self.logger())
                 regions_lobj, regions_xyxy = parse_regions(regions_str.split(" "), self.region_sorting, self.logger())
             sub_items = extract_regions(item, regions_lobj, regions_xyxy, self.suffix,
