@@ -143,11 +143,12 @@ class ArucoAutoRotate(BatchFilter):
 
             if deg != 0:
                 self.logger().info("Rotating image by: %d" % deg)
-                rotate = Rotate(mode=IMGAUG_MODE_REPLACE, from_degree=deg, to_degree=deg, suffix="", logging_level=self.logging_level)
+                rotate = Rotate(mode=IMGAUG_MODE_REPLACE, from_degree=deg, to_degree=deg, suffix="", update_size=True, logging_level=self.logging_level)
                 rotate.session = self.session
                 rotate.initialize()
                 new_item = rotate.process(item)
                 result.append(new_item)
+                rotate.finalize()
             else:
                 result.append(item)
 

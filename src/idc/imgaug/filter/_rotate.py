@@ -14,7 +14,7 @@ class Rotate(BaseImageAugmentation):
 
     def __init__(self, mode: str = IMGAUG_MODE_REPLACE, suffix: str = None,
                  seed: int = None, seed_augmentation: bool = False, threshold: float = 0.0,
-                 from_degree: float = None, to_degree: float = None,
+                 from_degree: float = None, to_degree: float = None, update_size: bool = False,
                  logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initializes the filter.
@@ -33,6 +33,8 @@ class Rotate(BaseImageAugmentation):
         :type from_degree: float
         :param to_degree: the end of the degree range to use for rotating the images
         :type to_degree: float
+        :param update_size: whether to update the image size after the rotation or use original size
+        :type update_size: bool
         :param logger_name: the name to use for the logger
         :type logger_name: str
         :param logging_level: the logging level to use
@@ -43,6 +45,7 @@ class Rotate(BaseImageAugmentation):
                          logger_name=logger_name, logging_level=logging_level)
         self.from_degree = from_degree
         self.to_degree = to_degree
+        self.update_size = update_size
 
     def name(self) -> str:
         """
@@ -90,6 +93,7 @@ class Rotate(BaseImageAugmentation):
         parser = super()._create_argparser()
         parser.add_argument("-f", "--from_degree", type=float, help="The start of the degree range to use for rotating the images.", default=None, required=False)
         parser.add_argument("-t", "--to_degree", type=float, help="The end of the degree range to use for rotating the images.", default=None, required=False)
+        parser.add_argument("-u", "--update_size", action="store_true", help="Whether to update the image size after the scaling operation or use original size.", default=None, required=False)
         return parser
 
     def _apply_args(self, ns: argparse.Namespace):
@@ -102,6 +106,7 @@ class Rotate(BaseImageAugmentation):
         super()._apply_args(ns)
         self.from_degree = ns.from_degree
         self.to_degree = ns.to_degree
+        self.update_size = ns.update_size
 
     def _default_suffix(self):
         """
@@ -135,6 +140,7 @@ class Rotate(BaseImageAugmentation):
                 iaa.Affine(
                     rotate=self.from_degree,
                     seed=aug_seed,
+                    fit_output=self.update_size,
                 )
             ])
         else:
@@ -142,5 +148,6 @@ class Rotate(BaseImageAugmentation):
                 iaa.Affine(
                     rotate=(self.from_degree, self.to_degree),
                     seed=aug_seed,
+                    fit_output=self.update_size,
                 )
             ])

@@ -8,7 +8,7 @@ Rotates images randomly within a range of degrees or by a specified degree. Spec
 ```
 usage: rotate [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [-N LOGGER_NAME]
               [--skip] [-m {replace,add}] [--suffix SUFFIX] [-s SEED] [-a]
-              [-T THRESHOLD] [-f FROM_DEGREE] [-t TO_DEGREE]
+              [-T THRESHOLD] [-f FROM_DEGREE] [-t TO_DEGREE] [-u]
 
 Rotates images randomly within a range of degrees or by a specified degree.
 Specify seed value and force augmentation to be seeded to generate repeatable
@@ -43,4 +43,6 @@ options:
   -t TO_DEGREE, --to_degree TO_DEGREE
                         The end of the degree range to use for rotating the
                         images. (default: None)
+  -u, --update_size     Whether to update the image size after the scaling
+                        operation or use original size. (default: None)
 ```

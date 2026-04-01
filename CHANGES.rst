@@ -13,6 +13,7 @@ Changelog
 - added parameter `--partial_sub_images` to `meta-sub-images` and `sub-images` to allow inclusion of
   images that don't have the required --col_width/--row_height
 - added `aruco-autorotate` filter for correcting rotation of images in 90deg increments
+- the `rotate` filter now has an `-u/--update_size` option to automatically adjust the dimensions
 
 
 0.1.0 (2025-10-31)
