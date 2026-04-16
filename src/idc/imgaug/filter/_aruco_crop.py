@@ -101,7 +101,7 @@ class ArucoCrop(RequiredFormatFilter):
     """
 
     def __init__(self, incorrect_format_action: str = None,
-                 aruco_type: str = None, min_num_markers: int = None, crop_type: str = None,
+                 aruco_type: str = None, min_num_markers: int = None, crop_type: str = None, crop_success_key: str = None,
                  logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initializes the filter.
@@ -114,6 +114,8 @@ class ArucoCrop(RequiredFormatFilter):
         :type min_num_markers: int
         :param crop_type: how to perform the crop in relation to the markers
         :type crop_type: str
+        :param crop_success_key: the (optional) key in the meta-data to store the crop success in (true/false)
+        :type crop_success_key: str
         :param logger_name: the name to use for the logger
         :type logger_name: str
         :param logging_level: the logging level to use
@@ -124,6 +126,7 @@ class ArucoCrop(RequiredFormatFilter):
         self.aruco_type = aruco_type
         self.min_num_markers = min_num_markers
         self.crop_type = crop_type
+        self.crop_success_key = crop_success_key
 
     def name(self) -> str:
         """
@@ -181,6 +184,7 @@ class ArucoCrop(RequiredFormatFilter):
         parser.add_argument("-t", "--aruco_type", choices=ARUCO_TYPES.keys(), default=DEFAULT_ARUCO_TYPE, help="The type of markers to detect.", required=False)
         parser.add_argument("-m", "--min_num_markers", type=int, default=3, help="The minimum number of markers that need to be detected in order to proceed with cropping.", required=False)
         parser.add_argument("-c", "--crop_type", choices=ARUCO_CROP_TYPES, default=DEFAULT_CROP_TYPE, help="How to crop in relation to the markers.", required=False)
+        parser.add_argument("--crop_success_key", type=str, default=None, help="The meta-data key to store the crop success under (true/false).", required=False)
         return parser
 
     def _apply_args(self, ns: argparse.Namespace):
@@ -194,6 +198,7 @@ class ArucoCrop(RequiredFormatFilter):
         self.aruco_type = ns.aruco_type
         self.min_num_markers = ns.min_num_markers
         self.crop_type = ns.crop_type
+        self.crop_success_key = ns.crop_success_key
 
     def initialize(self):
         """
@@ -314,6 +319,20 @@ class ArucoCrop(RequiredFormatFilter):
 
         return result
 
+    def _add_crop_success(self, item, success: bool):
+        """
+        Stores the crop success/failure in the meta-data, if a key was specified.
+
+        :param item: the item to update
+        :param success: whether successful or not
+        :type success: bool
+        """
+        if self.crop_success_key is None:
+            return
+        if not item.has_metadata():
+            item.set_metadata(dict())
+        item.get_metadata()[self.crop_success_key] = str(success)
+
     def _do_process(self, data):
         """
         Processes the data record(s).
@@ -337,10 +356,12 @@ class ArucoCrop(RequiredFormatFilter):
             all_corners, ids, rejected = detector.detectMarkers(gray)
             if ids is None:
                 self.logger().warning("No markers detected, skipping: %s" % item.image_name)
+                self._add_crop_success(item, False)
                 result.append(item)
                 continue
             elif len(ids) < self.min_num_markers:
                 self.logger().warning("Insufficient # of markers detected (%d < %d), skipping: %s" % (len(ids), self.min_num_markers, item.image_name))
+                self._add_crop_success(item, False)
                 result.append(item)
                 continue
             else:
@@ -363,6 +384,7 @@ class ArucoCrop(RequiredFormatFilter):
             elif self.crop_type == ARUCO_CROP_TYPE_INSIDE:
                 crop_rect = self._determine_inner_rect(item, markers)
             else:
+                self._add_crop_success(item, False)
                 result.append(item)
                 self.logger().warning("Unhandled crop type '%s', skipping: %s" % (self.crop_type, item.image_name))
                 continue
@@ -374,9 +396,11 @@ class ArucoCrop(RequiredFormatFilter):
             new_items = extract_regions(item, regions_lobj=[obj], regions_xyxy=[bbox], suppress_empty=False, suffix="",
                                         include_partial=True, logger=self.logger())
             if len(new_items) == 1:
+                self._add_crop_success(new_items[0][1], True)
                 result.append(new_items[0][1])
             else:
                 self.logger().warning("Crop failed?")
+                self._add_crop_success(item, False)
                 result.append(item)
 
         return flatten_list(result)
