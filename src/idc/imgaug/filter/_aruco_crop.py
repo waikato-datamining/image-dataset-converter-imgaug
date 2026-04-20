@@ -33,6 +33,11 @@ class Rectangle:
     bottom: int = None
     right: int = None
 
+    _width: int = None
+    _height: int = None
+    _center_x: int = None
+    _center_y: int = None
+
     @property
     def center_x(self) -> int:
         """
@@ -41,7 +46,9 @@ class Rectangle:
         :return: the center x
         :rtype: int
         """
-        return self.left + (self.right - self.left + 1) // 2
+        if self._center_x is None:
+            self._center_x = self.left + (self.right - self.left + 1) // 2
+        return self._center_x
 
     @property
     def center_y(self) -> int:
@@ -51,7 +58,9 @@ class Rectangle:
         :return: the center y
         :rtype: int
         """
-        return self.top + (self.bottom - self.top + 1) // 2
+        if self._center_y is None:
+            self._center_y = self.top + (self.bottom - self.top + 1) // 2
+        return self._center_y
 
     @property
     def width(self) -> int:
@@ -61,7 +70,9 @@ class Rectangle:
         :return: the width
         :rtype: int
         """
-        return self.right - self.left + 1
+        if self._width is None:
+            self._width = self.right - self.left + 1
+        return self._width
 
     @property
     def height(self) -> int:
@@ -71,7 +82,9 @@ class Rectangle:
         :return: the height
         :rtype: int
         """
-        return self.bottom - self.top + 1
+        if self._height is None:
+            self._height = self.bottom - self.top + 1
+        return self._height
 
     def distance_to_center(self, x: int, y: int) -> float:
         """
@@ -85,6 +98,32 @@ class Rectangle:
         :rtype: float
         """
         return math.sqrt((self.center_x - x)**2 + (self.center_y - y)**2)
+
+    def in_quadrant(self, x: int, y: int, quadrant: str):
+        """
+        Checks whether the x/y coordinates are in the specified quadrant.
+
+        :param x: the X coordinate
+        :type x: int
+        :param y: the Y coordinate
+        :type y: int
+        :param quadrant: the quadrant to check - tl, tr, bl, br
+        :type quadrant: str
+        :return: True if within that quadrant
+        :rtype: bool
+        """
+        w = self.width // 2
+        h = self.height // 2
+        if quadrant == "tl":
+            return (x >= self.left) and (x <= self.left + w - 1) and (y >= self.top) and (y <= self.top + h - 1)
+        elif quadrant == "tr":
+            return (x >= self.left + w) and (x <= self.left + self.width - 1) and (y >= self.top) and (y <= self.top + h - 1)
+        elif quadrant == "bl":
+            return (x >= self.left) and (x <= self.left + w - 1) and (y >= self.top + h) and (y <= self.top + self.height - 1)
+        elif quadrant == "br":
+            return (x >= self.left + w) and (x <= self.left + self.width - 1) and (y >= self.top + h) and (y <= self.top + self.height - 1)
+        else:
+            raise Exception("Invalid quadrant: %s" % quadrant)
 
     def __str__(self):
         """
@@ -278,22 +317,22 @@ class ArucoCrop(RequiredFormatFilter):
         for marker in markers:
             # tl
             d = marker.distance_to_center(outer.left, outer.top)
-            if (d < tld) and (d < max_dist):
+            if (d < tld) and (d < max_dist) and outer.in_quadrant(marker.center_x, marker.center_y, "tl"):
                 tld = d
                 tl = marker
             # tr
             d = marker.distance_to_center(outer.right, outer.top)
-            if (d < trd) and (d < max_dist):
+            if (d < trd) and (d < max_dist) and outer.in_quadrant(marker.center_x, marker.center_y, "tr"):
                 trd = d
                 tr = marker
             # bl
             d = marker.distance_to_center(outer.left, outer.bottom)
-            if (d < bld) and (d < max_dist):
+            if (d < bld) and (d < max_dist) and outer.in_quadrant(marker.center_x, marker.center_y, "bl"):
                 bld = d
                 bl = marker
             # br
             d = marker.distance_to_center(outer.right, outer.bottom)
-            if (d < brd) and (d < max_dist):
+            if (d < brd) and (d < max_dist) and outer.in_quadrant(marker.center_x, marker.center_y, "br"):
                 brd = d
                 br = marker
 
