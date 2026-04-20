@@ -393,8 +393,14 @@ class ArucoCrop(RequiredFormatFilter):
             self.logger().info("crop rect: %s" % str(crop_rect))
             bbox = (crop_rect.left, crop_rect.top, crop_rect.right, crop_rect.bottom)
             obj = LocatedObject(crop_rect.left, crop_rect.top, crop_rect.width, crop_rect.height)
-            new_items = extract_regions(item, regions_lobj=[obj], regions_xyxy=[bbox], suppress_empty=False, suffix="",
-                                        include_partial=True, logger=self.logger())
+            try:
+                new_items = extract_regions(item, regions_lobj=[obj], regions_xyxy=[bbox], suppress_empty=False, suffix="",
+                                            include_partial=True, logger=self.logger())
+            except:
+                self.logger().exception("Failed to extract regions!")
+                self._add_crop_success(item, False)
+                result.append(item)
+
             if len(new_items) == 1:
                 self._add_crop_success(new_items[0][1], True)
                 result.append(new_items[0][1])
