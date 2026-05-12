@@ -12,7 +12,7 @@ usage: fast-line-detection [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
                            [--distance_threshold DISTANCE_THRESHOLD]
                            [--canny_th1 CANNY_TH1] [--canny_th2 CANNY_TH2]
                            [--canny_aperture_size CANNY_APERTURE_SIZE]
-                           [--do_merge]
+                           [--do_merge] [--length_key LENGTH_KEY]
 
 Detects lines in the image and stores them as polygons.
 
@@ -46,4 +46,7 @@ options:
                         taken as an edge image. (default: 3)
   --do_merge            If true, incremental merging of segments will be
                         performed. (default: False)
+  --length_key LENGTH_KEY
+                        The key in the object's meta-data for storing the
+                        length information. (default: length)
 ```

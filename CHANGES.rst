@@ -15,6 +15,8 @@ Changelog
 - added `aruco-autorotate` filter for correcting rotation of images in 90deg increments
 - the `rotate` filter now has an `-u/--update_size` option to automatically adjust the dimensions
 - using `seppl.variables` now
+- `fast-line-detection` and `hough-lines-prob` now store the length of the line segments in the object's
+  meta-data as well
 
 
 0.1.0 (2025-10-31)

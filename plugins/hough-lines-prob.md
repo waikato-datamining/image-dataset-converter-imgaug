@@ -11,6 +11,7 @@ usage: hough-lines-prob [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
                         [--theta THETA] [--threshold THRESHOLD]
                         [--min_line_length MIN_LINE_LENGTH]
                         [--max_line_gap MAX_LINE_GAP]
+                        [--length_key LENGTH_KEY]
 
 Finds line segments in a binary image using the probabilistic Hough transform.
 
@@ -39,4 +40,7 @@ options:
   --max_line_gap MAX_LINE_GAP
                         Maximum allowed gap between points on the same line to
                         link them. (default: 0)
+  --length_key LENGTH_KEY
+                        The key in the object's meta-data for storing the
+                        length information. (default: length)
 ```

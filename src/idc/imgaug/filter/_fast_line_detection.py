@@ -1,4 +1,5 @@
 import argparse
+import math
 from typing import List
 
 import cv2
@@ -13,13 +14,17 @@ from kasperl.api import make_list, flatten_list, safe_deepcopy
 from idc.api import ImageData, ObjectDetectionData, ImageSegmentationData, LABEL_KEY, ensure_grayscale
 
 
+LENGTH_KEY_DEFAULT = "length"
+
+
 class FastLineDetection(BatchFilter):
     """
     Detects lines in the image and stores them as polygons.
     """
 
     def __init__(self, label: str = None, length_threshold: int = None, distance_threshold: float = None,
-                 canny_th1: float = None, canny_th2: float = None, canny_aperture_size: int = None, do_merge: bool = None,
+                 canny_th1: float = None, canny_th2: float = None, canny_aperture_size: int = None,
+                 do_merge: bool = None, length_key: str = None,
                  logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initializes the filter.
@@ -38,6 +43,8 @@ class FastLineDetection(BatchFilter):
         :type canny_aperture_size: int
         :param do_merge: If true, incremental merging of segments will be performed
         :type do_merge: bool
+        :param length_key: the key in the object's meta-data for storing the length information
+        :type length_key: str
         :param logger_name: the name to use for the logger
         :type logger_name: str
         :param logging_level: the logging level to use
@@ -51,6 +58,7 @@ class FastLineDetection(BatchFilter):
         self.canny_th2 = canny_th2
         self.canny_aperture_size = canny_aperture_size
         self.do_merge = do_merge
+        self.length_key = length_key
 
     def name(self) -> str:
         """
@@ -103,6 +111,7 @@ class FastLineDetection(BatchFilter):
         parser.add_argument("--canny_th2", type=float, default=50.0, help="Second threshold for hysteresis procedure in Canny().", required=False)
         parser.add_argument("--canny_aperture_size", type=int, default=3, help="Aperture size for the sobel operator in Canny(). If zero, Canny() is not applied and the input image is taken as an edge image.", required=False)
         parser.add_argument("--do_merge", action="store_true", help="If true, incremental merging of segments will be performed.", required=False)
+        parser.add_argument("--length_key", type=str, help="The key in the object's meta-data for storing the length information.", default=LENGTH_KEY_DEFAULT, required=False)
         return parser
 
     def _apply_args(self, ns: argparse.Namespace):
@@ -120,6 +129,7 @@ class FastLineDetection(BatchFilter):
         self.canny_th2 = ns.canny_th2
         self.canny_aperture_size = ns.canny_aperture_size
         self.do_merge = ns.do_merge
+        self.length_key = ns.length_key
 
     def initialize(self):
         """
@@ -138,6 +148,8 @@ class FastLineDetection(BatchFilter):
             self.canny_aperture_size = 3
         if self.do_merge is None:
             self.do_merge = False
+        if self.length_key is None:
+            self.length_key = LENGTH_KEY_DEFAULT
 
     def _detect_lines(self, image: np.ndarray, ann: LocatedObjects, label: str):
         """
@@ -163,6 +175,7 @@ class FastLineDetection(BatchFilter):
                 polygon = Polygon(*points)
                 obj = LocatedObject(x0, y0, x1 - x0 + 1, y1 - y0 + 1)
                 obj.metadata[LABEL_KEY] = label
+                obj.metadata[self.length_key] = math.sqrt((x1 - x0 + 1)**2 + (y1 - y0 + 1)**2)
                 obj.set_polygon(polygon)
                 ann.append(obj)
 

@@ -14,13 +14,16 @@ from kasperl.api import make_list, flatten_list, safe_deepcopy
 from idc.api import ImageData, ObjectDetectionData, ImageSegmentationData, LABEL_KEY, ensure_grayscale
 
 
+LENGTH_KEY_DEFAULT = "length"
+
+
 class HoughLinesProbabilistic(BatchFilter):
     """
     Detects lines in the image and stores them as polygons.
     """
 
     def __init__(self, label: str = None, rho: float = None, theta: float = None,
-                 threshold: int = None, min_line_length: int = None, max_line_gap: int = None,
+                 threshold: int = None, min_line_length: int = None, max_line_gap: int = None, length_key: str = None,
                  logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initializes the filter.
@@ -37,6 +40,8 @@ class HoughLinesProbabilistic(BatchFilter):
         :type min_line_length: float
         :param max_line_gap: Maximum allowed gap between points on the same line to link them.
         :type max_line_gap: int
+        :param length_key: the key in the object's meta-data for storing the length information
+        :type length_key: str
         :param logger_name: the name to use for the logger
         :type logger_name: str
         :param logging_level: the logging level to use
@@ -49,6 +54,7 @@ class HoughLinesProbabilistic(BatchFilter):
         self.threshold = threshold
         self.min_line_length = min_line_length
         self.max_line_gap = max_line_gap
+        self.length_key = length_key
 
     def name(self) -> str:
         """
@@ -100,6 +106,7 @@ class HoughLinesProbabilistic(BatchFilter):
         parser.add_argument("--threshold", type=int, default=50, help="Accumulator threshold parameter. Only those lines are returned that get enough votes (>threshold).", required=False)
         parser.add_argument("--min_line_length", type=int, default=0, help="Minimum line length. Line segments shorter than that are rejected.", required=False)
         parser.add_argument("--max_line_gap", type=int, default=0, help="Maximum allowed gap between points on the same line to link them.", required=False)
+        parser.add_argument("--length_key", type=str, help="The key in the object's meta-data for storing the length information.", default=LENGTH_KEY_DEFAULT, required=False)
         return parser
 
     def _apply_args(self, ns: argparse.Namespace):
@@ -116,6 +123,7 @@ class HoughLinesProbabilistic(BatchFilter):
         self.threshold = ns.threshold
         self.min_line_length = ns.min_line_length
         self.max_line_gap = ns.max_line_gap
+        self.length_key = ns.length_key
 
     def initialize(self):
         """
@@ -132,6 +140,8 @@ class HoughLinesProbabilistic(BatchFilter):
             self.min_line_length = 0
         if self.max_line_gap is None:
             self.max_line_gap = 0
+        if self.length_key is None:
+            self.length_key = LENGTH_KEY_DEFAULT
 
     def _detect_lines(self, image: np.ndarray, ann: LocatedObjects, label: str):
         """
@@ -156,6 +166,7 @@ class HoughLinesProbabilistic(BatchFilter):
                 polygon = Polygon(*points)
                 obj = LocatedObject(x0, y0, x1 - x0 + 1, y1 - y0 + 1)
                 obj.metadata[LABEL_KEY] = label
+                obj.metadata[self.length_key] = math.sqrt((x1 - x0 + 1)**2 + (y1 - y0 + 1)**2)
                 obj.set_polygon(polygon)
                 ann.append(obj)
 
