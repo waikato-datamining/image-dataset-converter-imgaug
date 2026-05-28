@@ -16,6 +16,7 @@
 * [hough-lines-prob](hough-lines-prob.md)
 * [hsl-grayscale](hsl-grayscale.md)
 * [linear-contrast](linear-contrast.md)
+* [merge-segmentation-layers](merge-segmentation-layers.md)
 * [meta-sub-images](meta-sub-images.md)
 * [overlay-regions](overlay-regions.md)
 * [resize](resize.md)

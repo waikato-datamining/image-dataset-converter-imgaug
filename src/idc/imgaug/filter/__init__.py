@@ -18,6 +18,7 @@ from ._gaussian_blur import GaussianBlur
 from ._hsl_grayscale import HSLGrayScale
 from ._hough_lines_prob import HoughLinesProbabilistic
 from ._linear_contrast import LinearContrast
+from ._merge_segmentation_layers import MergeSegmentationLayers, MERGE_OPERATIONS, MERGE_OPERATION_ADD, MERGE_OPERATION_SUBTRACT
 from ._meta_sub_images import MetaSubImages
 from ._overlay_regions import OverlayRegions
 from ._resize import Resize
