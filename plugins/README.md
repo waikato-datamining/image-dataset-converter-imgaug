@@ -5,6 +5,7 @@
 * [aruco-detector](aruco-detector.md)
 * [change-grayscale](change-grayscale.md)
 * [clip-grayscale](clip-grayscale.md)
+* [code-detector](code-detector.md)
 * [crop](crop.md)
 * [crop-to-label](crop-to-label.md)
 * [enhance](enhance.md)
