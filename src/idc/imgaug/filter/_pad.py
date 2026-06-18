@@ -1,12 +1,11 @@
 import argparse
 from typing import List
 
-import numpy as np
 from PIL import Image
 from simple_palette_utils import parse_rgb
 from wai.logging import LOGGING_WARNING
 
-from idc.api import ImageClassificationData, ImageSegmentationData, ObjectDetectionData, DepthData
+from idc.api import ImageClassificationData, ImageSegmentationData, ObjectDetectionData, DepthData, adjust_matrix
 from kasperl.api import make_list, flatten_list, safe_deepcopy
 from seppl.io import BatchFilter
 
@@ -111,21 +110,6 @@ class Pad(BatchFilter):
             raise Exception("Invalid color specification: %s" % self.background)
         self._background = self._background[0]
 
-    def _adjust_matrix(self, matrix: np.ndarray, width_old: int, height_old: int, width_new: int, height_new: int) -> np.ndarray:
-        """
-        Creates a matrix with the new dimensions and transfers the data from the old one.
-
-        :param matrix: the old matrix
-        :param width_old: the old width
-        :param height_old: the old height
-        :param width_new: the new width
-        :param height_new: the new height
-        :return: the new matrix with the content of the old matrix
-        """
-        matrix_new = np.zeros((height_new, width_new), dtype=matrix.dtype)
-        matrix_new[0:height_old, 0:width_old] = matrix
-        return matrix_new
-
     def _do_process(self, data):
         """
         Processes the data record(s).
@@ -165,14 +149,14 @@ class Pad(BatchFilter):
                     elif isinstance(item, ImageSegmentationData):
                         # adjust the layers
                         for layer in item_new.annotation.layers:
-                            item_new.annotation.layers[layer] = self._adjust_matrix(item_new.annotation.layers[layer], item.image_width, item.image_height, width_new, height_new)
+                            item_new.annotation.layers[layer] = adjust_matrix(item_new.annotation.layers[layer], width_new, height_new)
                     elif isinstance(item, ObjectDetectionData):
                         # make sure to have absolute coordinates
                         if item.is_normalized():
                             item_new.annotation = item.get_absolute()
                     elif isinstance(item, DepthData):
                         # adjust depth information matrix
-                        item_new.annotation.data = self._adjust_matrix(item_new.annotation.data, item.image_width, item.image_height, width_new, height_new)
+                        item_new.annotation.data = adjust_matrix(item_new.annotation.data, width_new, height_new)
                     else:
                         self.logger().warning("Unhandled data type: %s" % str(item))
                 result.append(item_new)
