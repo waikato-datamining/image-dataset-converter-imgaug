@@ -9,7 +9,7 @@ from idc.api import ImageData, ObjectDetectionData, LABEL_KEY
 from kasperl.api import make_list, flatten_list
 from seppl.io import BatchFilter
 
-DEFAULT_PREFIX = "qrcode-"
+DEFAULT_PREFIX = "code-"
 
 CODE_EAN2 = "ean2"
 CODE_EAN5 = "ean5"
@@ -78,14 +78,11 @@ class CodeDetector(BatchFilter):
     Detects QR codes and adds the content to the meta-data.
     """
 
-    def __init__(self, incorrect_format_action: str = None,
-                 prefix: str = None, code_type: str = None,
+    def __init__(self, prefix: str = None, code_type: str = None,
                  logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initializes the filter.
 
-        :param incorrect_format_action: how to react to incorrect input format
-        :type incorrect_format_action: str
         :param prefix: the prefix to use in the meta-data
         :type prefix: str
         :param code_type: the type of code to identify, None for auto

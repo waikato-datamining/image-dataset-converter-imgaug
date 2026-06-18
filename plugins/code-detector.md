@@ -23,7 +23,7 @@ options:
                         (default: False)
   -p PREFIX, --prefix PREFIX
                         The prefix to use for the detected markers in the
-                        meta-data. (default: qrcode-)
+                        meta-data. (default: code-)
   -t {ean2,ean5,ean8,ean13,upca,upce,isbn10,composite,i25,databar,databar-exp,codabar,code39,code93,code128,pdf417,qrcode,sqcode}, --code_type {ean2,ean5,ean8,ean13,upca,upce,isbn10,composite,i25,databar,databar-exp,codabar,code39,code93,code128,pdf417,qrcode,sqcode}
                         The specific type of code to detect, auto-detect any
                         supported code if not specified. (default: None)
