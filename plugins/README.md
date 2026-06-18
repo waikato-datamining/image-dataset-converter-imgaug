@@ -20,6 +20,7 @@
 * [merge-segmentation-layers](merge-segmentation-layers.md)
 * [meta-sub-images](meta-sub-images.md)
 * [overlay-regions](overlay-regions.md)
+* [pad](pad.md)
 * [resize](resize.md)
 * [roi-images](roi-images.md)
 * [rotate](rotate.md)

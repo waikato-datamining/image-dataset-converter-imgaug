@@ -20,6 +20,7 @@ Changelog
 - added `merge-segmentation-layers` filter to merging the layer of image segmentation item in storage with
   the one currently passing through filter
 - added `code-detector` filter for detecting 1-dimensional barcodes and QR codes
+- added `pad` filter for padding images to minimum width/height
 
 
 0.1.0 (2025-10-31)

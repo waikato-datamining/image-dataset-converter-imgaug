@@ -22,6 +22,7 @@ from ._linear_contrast import LinearContrast
 from ._merge_segmentation_layers import MergeSegmentationLayers, MERGE_OPERATIONS, MERGE_OPERATION_ADD, MERGE_OPERATION_SUBTRACT
 from ._meta_sub_images import MetaSubImages
 from ._overlay_regions import OverlayRegions
+from ._pad import Pad
 from ._resize import Resize
 from ._roi_images import RegionOfInterestImages
 from ._rotate import Rotate
