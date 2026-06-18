@@ -1,12 +1,12 @@
 import argparse
-import numpy as np
 from typing import List
 
+import numpy as np
 from PIL import Image
 from simple_palette_utils import parse_rgb
 from wai.logging import LOGGING_WARNING
 
-from idc.api import ImageClassificationData, ImageSegmentationData, ObjectDetectionData, DepthData, array_to_image
+from idc.api import ImageClassificationData, ImageSegmentationData, ObjectDetectionData, DepthData
 from kasperl.api import make_list, flatten_list, safe_deepcopy
 from seppl.io import BatchFilter
 
@@ -112,6 +112,16 @@ class Pad(BatchFilter):
         self._background = self._background[0]
 
     def _adjust_matrix(self, matrix: np.ndarray, width_old: int, height_old: int, width_new: int, height_new: int) -> np.ndarray:
+        """
+        Creates a matrix with the new dimensions and transfers the data from the old one.
+
+        :param matrix: the old matrix
+        :param width_old: the old width
+        :param height_old: the old height
+        :param width_new: the new width
+        :param height_new: the new height
+        :return: the new matrix with the content of the old matrix
+        """
         matrix_new = np.zeros((height_new, width_new), dtype=matrix.dtype)
         matrix_new[0:height_old, 0:width_old] = matrix
         return matrix_new
