@@ -1,7 +1,7 @@
 # meta-sub-images
 
-* accepts: idc.api.ImageClassificationData, idc.api.ObjectDetectionData, idc.api.ImageSegmentationData
-* generates: idc.api.ImageClassificationData, idc.api.ObjectDetectionData, idc.api.ImageSegmentationData
+* accepts: idc.api.ImageClassificationData, idc.api.ObjectDetectionData, idc.api.ImageSegmentationData, idc.api.DepthData
+* generates: idc.api.ImageClassificationData, idc.api.ObjectDetectionData, idc.api.ImageSegmentationData, idc.api.DepthData
 
 Extracts sub-images (incl their annotations) from the images coming through, using the defined regions or #rows/cols, and passes them through the base filter before reassembling them again.
 

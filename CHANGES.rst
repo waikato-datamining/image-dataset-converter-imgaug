@@ -22,6 +22,7 @@ Changelog
 - added `code-detector` filter for detecting 1-dimensional barcodes and QR codes
 - added `pad` filter for padding images to minimum width/height
 - added `simple-crop` filter for cropping images to the specified width/height
+- the filters `sub-images` and `meta-sub-images` now handle `DepthData` images as well
 
 
 0.1.0 (2025-10-31)

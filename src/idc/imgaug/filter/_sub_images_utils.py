@@ -8,7 +8,8 @@ from wai.common.adams.imaging.locateobjects import LocatedObject, LocatedObjects
 from wai.common.geometry import Point as WaiPoint, Polygon as WaiPolygon
 
 from idc.api import ImageSegmentationAnnotations, ImageClassificationData, ImageSegmentationData, ObjectDetectionData, \
-    ImageData, crop_image, pad_image, fit_layers, fit_located_object, array_to_image, empty_image
+    ImageData, crop_image, pad_image, fit_layers, fit_located_object, array_to_image, empty_image, DepthData, \
+    fit_matrix, DepthInformation
 
 REGION_SORTING_NONE = "none"
 REGION_SORTING_XY = "x-then-y"
@@ -172,6 +173,7 @@ def extract_regions(item: ImageData, regions_lobj: List[LocatedObject], regions_
                 item_new = ImageClassificationData(image_name=image_name_new, data=sub_bytes.getvalue(),
                                                    annotation=annotation, metadata=item.get_metadata())
                 result.append((region_lobj, item_new, orig_dims))
+
         elif isinstance(item, ObjectDetectionData):
             new_objects = []
             if item.has_annotation():
@@ -183,6 +185,7 @@ def extract_regions(item: ImageData, regions_lobj: List[LocatedObject], regions_
                 item_new = ObjectDetectionData(image_name=image_name_new, data=sub_bytes.getvalue(),
                                                annotation=LocatedObjects(new_objects), metadata=item.get_metadata())
                 result.append((region_lobj, item_new, orig_dims))
+
         elif isinstance(item, ImageSegmentationData):
             new_annotations = ImageSegmentationAnnotations(list(), dict())
             if item.has_annotation():
@@ -195,6 +198,14 @@ def extract_regions(item: ImageData, regions_lobj: List[LocatedObject], regions_
                 item_new = ImageSegmentationData(image_name=image_name_new, data=sub_bytes.getvalue(),
                                                  annotation=new_annotations, metadata=item.get_metadata())
                 result.append((region_lobj, item_new, orig_dims))
+
+        elif isinstance(item, DepthData):
+            new_annotations = fit_matrix(region_lobj, item.annotation.data, suppress_empty)
+            if not suppress_empty or (new_annotations is not None):
+                item_new = DepthData(image_name=image_name_new, data=sub_bytes.getvalue(),
+                                     annotation=DepthInformation(data=new_annotations), metadata=item.get_metadata())
+                result.append((region_lobj, item_new, orig_dims))
+
         else:
             logger.warning("Unhandled data (%s), skipping!" % str(type(item)))
             return None
@@ -349,6 +360,11 @@ def prune_annotations(image):
 
         # no layers left? -> remove annotations
         if len(image.annotation.layers) == 0:
+            image.annotation = None
+
+    elif isinstance(image, DepthData):
+        unique = np.unique(image.annotation.data)
+        if (len(unique) == 1) and (unique[0] == 0):
             image.annotation = None
 
     else:

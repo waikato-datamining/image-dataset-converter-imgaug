@@ -5,7 +5,7 @@ from seppl.io import BatchFilter
 from wai.logging import LOGGING_WARNING
 
 from kasperl.api import make_list, flatten_list
-from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData
+from idc.api import ImageClassificationData, ObjectDetectionData, ImageSegmentationData, DepthData
 from idc.imgaug.filter._sub_images_utils import REGION_SORTING_NONE, REGION_SORTING, PLACEHOLDERS, DEFAULT_SUFFIX, \
     parse_regions, extract_regions, generate_regions, regions_to_string
 
@@ -101,7 +101,7 @@ class SubImages(BatchFilter):
         :return: the list of classes
         :rtype: list
         """
-        return [ImageClassificationData, ObjectDetectionData, ImageSegmentationData]
+        return [ImageClassificationData, ObjectDetectionData, ImageSegmentationData, DepthData]
 
     def generates(self) -> List:
         """
@@ -110,7 +110,7 @@ class SubImages(BatchFilter):
         :return: the list of classes
         :rtype: list
         """
-        return [ImageClassificationData, ObjectDetectionData, ImageSegmentationData]
+        return [ImageClassificationData, ObjectDetectionData, ImageSegmentationData, DepthData]
 
     def _create_argparser(self) -> argparse.ArgumentParser:
         """
