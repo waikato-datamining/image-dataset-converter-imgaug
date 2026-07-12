@@ -7,7 +7,7 @@ try:
 except:
     ZBarSymbol = None
     decode = None
-    ZBAR_AVAILABLE = True
+    ZBAR_AVAILABLE = False
 
 from wai.common.adams.imaging.locateobjects import LocatedObject, LocatedObjects
 from wai.logging import LOGGING_WARNING
