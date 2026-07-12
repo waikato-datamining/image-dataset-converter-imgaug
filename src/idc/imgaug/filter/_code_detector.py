@@ -1,7 +1,14 @@
 import argparse
 from typing import List
 
-from pyzbar.pyzbar import ZBarSymbol, decode
+try:
+    from pyzbar.pyzbar import ZBarSymbol, decode
+    ZBAR_AVAILABLE = True
+except:
+    ZBarSymbol = None
+    decode = None
+    ZBAR_AVAILABLE = True
+
 from wai.common.adams.imaging.locateobjects import LocatedObject, LocatedObjects
 from wai.logging import LOGGING_WARNING
 
@@ -160,6 +167,8 @@ class CodeDetector(BatchFilter):
         Initializes the processing, e.g., for opening files or databases.
         """
         super().initialize()
+        if not ZBAR_AVAILABLE:
+            raise Exception("zbar library not installed?\nsudo apt install libzbar-dev\nsudo yum install zbar-devel")
         if self.prefix is None:
             self.prefix = DEFAULT_PREFIX
         if (self.code_type is not None) and (len(self.code_type) == 0):
