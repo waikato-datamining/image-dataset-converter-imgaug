@@ -37,47 +37,51 @@ CODE_PDF417 = "pdf417"
 CODE_QRCODE = "qrcode"
 CODE_SQCODE = "sqcode"
 
-CODE_TYPES = [
-    CODE_EAN2,
-    CODE_EAN5,
-    CODE_EAN8,
-    CODE_EAN13,
-    CODE_UPCA,
-    CODE_UPCE,
-    CODE_ISBN10,
-    CODE_COMPOSITE,
-    CODE_I25,
-    CODE_DATABAR,
-    CODE_DATABAR_EXP,
-    CODE_CODABAR,
-    CODE_CODE39,
-    CODE_CODE93,
-    CODE_CODE128,
-    CODE_PDF417,
-    CODE_QRCODE,
-    CODE_SQCODE,
-]
+if ZBAR_AVAILABLE:
+    CODE_TYPES = [
+        CODE_EAN2,
+        CODE_EAN5,
+        CODE_EAN8,
+        CODE_EAN13,
+        CODE_UPCA,
+        CODE_UPCE,
+        CODE_ISBN10,
+        CODE_COMPOSITE,
+        CODE_I25,
+        CODE_DATABAR,
+        CODE_DATABAR_EXP,
+        CODE_CODABAR,
+        CODE_CODE39,
+        CODE_CODE93,
+        CODE_CODE128,
+        CODE_PDF417,
+        CODE_QRCODE,
+        CODE_SQCODE,
+    ]
 
-CODE_SYMBOLS = {
-    CODE_EAN2: ZBarSymbol.EAN2,
-    CODE_EAN5: ZBarSymbol.EAN5,
-    CODE_EAN8: ZBarSymbol.EAN8,
-    CODE_EAN13: ZBarSymbol.EAN13,
-    CODE_UPCA: ZBarSymbol.UPCA,
-    CODE_UPCE: ZBarSymbol.UPCE,
-    CODE_ISBN10: ZBarSymbol.ISBN10,
-    CODE_COMPOSITE: ZBarSymbol.COMPOSITE,
-    CODE_I25: ZBarSymbol.I25,
-    CODE_DATABAR: ZBarSymbol.DATABAR,
-    CODE_DATABAR_EXP: ZBarSymbol.DATABAR_EXP,
-    CODE_CODABAR: ZBarSymbol.CODABAR,
-    CODE_CODE39: ZBarSymbol.CODE39,
-    CODE_CODE93: ZBarSymbol.CODE93,
-    CODE_CODE128: ZBarSymbol.CODE128,
-    CODE_PDF417: ZBarSymbol.PDF417,
-    CODE_QRCODE: ZBarSymbol.QRCODE,
-    CODE_SQCODE: ZBarSymbol.SQCODE,
-}
+    CODE_SYMBOLS = {
+        CODE_EAN2: ZBarSymbol.EAN2,
+        CODE_EAN5: ZBarSymbol.EAN5,
+        CODE_EAN8: ZBarSymbol.EAN8,
+        CODE_EAN13: ZBarSymbol.EAN13,
+        CODE_UPCA: ZBarSymbol.UPCA,
+        CODE_UPCE: ZBarSymbol.UPCE,
+        CODE_ISBN10: ZBarSymbol.ISBN10,
+        CODE_COMPOSITE: ZBarSymbol.COMPOSITE,
+        CODE_I25: ZBarSymbol.I25,
+        CODE_DATABAR: ZBarSymbol.DATABAR,
+        CODE_DATABAR_EXP: ZBarSymbol.DATABAR_EXP,
+        CODE_CODABAR: ZBarSymbol.CODABAR,
+        CODE_CODE39: ZBarSymbol.CODE39,
+        CODE_CODE93: ZBarSymbol.CODE93,
+        CODE_CODE128: ZBarSymbol.CODE128,
+        CODE_PDF417: ZBarSymbol.PDF417,
+        CODE_QRCODE: ZBarSymbol.QRCODE,
+        CODE_SQCODE: ZBarSymbol.SQCODE,
+    }
+else:
+    CODE_TYPES = []
+    CODE_SYMBOLS = {}
 
 
 class CodeDetector(BatchFilter):
