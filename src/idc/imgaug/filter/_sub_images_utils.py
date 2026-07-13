@@ -244,6 +244,9 @@ def new_from_template(item, rebuild_image: bool = False):
         annotation = ImageSegmentationAnnotations(labels, layers)
         result = ImageSegmentationData(image_name=item.image_name, data=data,
                                        metadata=item.get_metadata(), annotation=annotation)
+    elif isinstance(item, DepthData):
+        result = DepthData(image_name=item.image_name, data=data,
+                           metadata=item.get_metadata(), annotation=DepthInformation())
     else:
         raise Exception("Unhandled type of data: %s" % str(type(item)))
 
@@ -325,6 +328,16 @@ def transfer_region(full_image, sub_image, region: LocatedObject, rebuild_image:
                 layer = crop_image(layer, crop_width=crop_width, crop_height=crop_height)
                 full_image.annotation.layers[label][y:y + h, x:x + w] += layer
                 full_image.annotation.layers[label] = np.where(full_image.annotation.layers[label] > 0, 255, full_image.annotation.layers[label])
+
+        # depth
+        elif isinstance(full_image, DepthInformation):
+            x = region.x
+            y = region.y
+            w = region.width
+            h = region.height
+            sub = crop_image(sub_image.annotation.data, crop_width=crop_width, crop_height=crop_height)
+            full_image.annotation.data[y:y + h, x:x + w] += sub
+            full_image.annotation.data = np.where(full_image.annotation.data > 0, 255, full_image.annotation.data)
 
         # unknown
         else:
