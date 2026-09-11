@@ -23,6 +23,7 @@ Changelog
 - added `pad` filter for padding images to minimum width/height
 - added `simple-crop` filter for cropping images to the specified width/height
 - the filters `sub-images` and `meta-sub-images` now handle `DepthData` images as well
+- the `augment_image` function now takes an optional `logging.Logger` instance and is now more robust
 
 
 0.1.0 (2025-10-31)

@@ -1,4 +1,5 @@
 import argparse
+import traceback
 from typing import List, Union
 
 import imgaug.augmenters as iaa
@@ -127,7 +128,7 @@ class Resize(BatchFilter):
         result = []
         aug = iaa.Resize({"height": self._height, "width": self._width})
         for item in make_list(data):
-            item_new = augment_image(item, aug)
+            item_new = augment_image(item, aug, logger=self.logger())
             result.append(item_new)
 
         return flatten_list(result)

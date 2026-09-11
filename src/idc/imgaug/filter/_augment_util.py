@@ -1,3 +1,4 @@
+import logging
 import imageio.v2 as imageio
 from imgaug.augmentables.bbs import BoundingBox, BoundingBoxesOnImage
 from imgaug.augmentables.polys import Polygon, PolygonsOnImage
@@ -9,7 +10,7 @@ from wai.common.geometry import Polygon as WaiPolygon
 from idc.api import ImageData, ObjectDetectionData, ImageSegmentationData, combine_layers, split_layers, array_to_image
 
 
-def augment_image(item: ImageData, pipeline, image_name: str = None) -> ImageData:
+def augment_image(item: ImageData, pipeline, image_name: str = None, logger: logging.Logger = None) -> ImageData:
     """
     Augments the image by applying the pipeline. The annotations get processed accordingly.
 
@@ -18,6 +19,8 @@ def augment_image(item: ImageData, pipeline, image_name: str = None) -> ImageDat
     :param image_name: the new image name, uses the current one when None
     :type image_name: str
     :param pipeline: the augmentation pipeline
+    :param logger: optional logger instance to use
+    :type logger: logging.Logger
     :return: the potentially updated image
     :rtype: ImageData
     """
@@ -101,26 +104,30 @@ def augment_image(item: ImageData, pipeline, image_name: str = None) -> ImageDat
     elif polys_aug is not None:
         objs_aug = []
         for i, poly in enumerate(polys_aug):
-            # skip ones outside image
-            if poly.is_out_of_image(image_aug):
-                continue
-            # clip bboxes to fit into image
-            polys = poly.clip_out_of_image(image_aug)
-            if len(polys) == 0:
-                continue
-            for p in polys:
-                # update located object
-                obj_aug = annotation[i].get_clone()
-                bbox = p.to_bounding_box()
-                obj_aug.x = float(bbox.x1)
-                obj_aug.y = float(bbox.y1)
-                obj_aug.width = float(bbox.x2 - bbox.x1 + 1)
-                obj_aug.height = float(bbox.y2 - bbox.y1 + 1)
-                points = []
-                for row in p.coords:
-                    points.append(WaiPoint((int(row[0])), int(row[1])))
-                obj_aug.set_polygon(WaiPolygon(*points))
-                objs_aug.append(obj_aug)
+            try:
+                # skip ones outside image
+                if poly.is_out_of_image(image_aug):
+                    continue
+                # clip bboxes to fit into image
+                polys = poly.clip_out_of_image(image_aug)
+                if len(polys) == 0:
+                    continue
+                for p in polys:
+                    # update located object
+                    obj_aug = annotation[i].get_clone()
+                    bbox = p.to_bounding_box()
+                    obj_aug.x = float(bbox.x1)
+                    obj_aug.y = float(bbox.y1)
+                    obj_aug.width = float(bbox.x2 - bbox.x1 + 1)
+                    obj_aug.height = float(bbox.y2 - bbox.y1 + 1)
+                    points = []
+                    for row in p.coords:
+                        points.append(WaiPoint((int(row[0])), int(row[1])))
+                    obj_aug.set_polygon(WaiPolygon(*points))
+                    objs_aug.append(obj_aug)
+            except:
+                if logger is not None:
+                    logger.exception("Failed to convert polygon #%d back into located object: %s" % (i, str(poly)))
         annotation_new = LocatedObjects(objs_aug)
     elif imgsegmap_aug is not None:
         annotation_new = split_layers(imgsegmap_aug.get_arr(), annotation.labels)
