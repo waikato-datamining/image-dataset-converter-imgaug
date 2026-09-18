@@ -180,7 +180,7 @@ def extract_regions(item: ImageData, regions_lobj: List[LocatedObject], regions_
                 for ann_lobj in item.annotation:
                     ratio = region_lobj.overlap_ratio(ann_lobj)
                     if ((ratio > 0) and include_partial) or (ratio >= 1):
-                        new_objects.append(fit_located_object(region_index, region_lobj, ann_lobj, logger=logger, context=item.image_name))
+                        new_objects.append(fit_located_object(region_index, region_lobj, ann_lobj, logger=logger, context=item.image_name + "/" + str(ann_lobj)))
             if not suppress_empty or (len(new_objects) > 0):
                 item_new = ObjectDetectionData(image_name=image_name_new, data=sub_bytes.getvalue(),
                                                annotation=LocatedObjects(new_objects), metadata=item.get_metadata())

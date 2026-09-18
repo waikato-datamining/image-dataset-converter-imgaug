@@ -158,7 +158,7 @@ class SimpleCrop(BatchFilter):
                         for ann_lobj in annotation:
                             ratio = ann_lobj.overlap_ratio(region_lobj)
                             if ((ratio > 0) and self.include_partial) or (ratio >= 1):
-                                new_objects.append(fit_located_object(-1, region_lobj, ann_lobj, logger=self.logger(), context=item.image_name))
+                                new_objects.append(fit_located_object(-1, region_lobj, ann_lobj, logger=self.logger(), context=item.image_name + "/" + str(ann_lobj)))
                         item_new.annotation = LocatedObjects(new_objects)
                     elif isinstance(item, DepthData):
                         # adjust depth information matrix
