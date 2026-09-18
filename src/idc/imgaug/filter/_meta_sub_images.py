@@ -298,7 +298,7 @@ class MetaSubImages(BatchFilter):
                         self.logger().error("Expected a single item from base filter, but received a list (#items=%d) - skipping!" % len(new_sub_item))
                         continue
                     transfer_region(new_item, new_sub_item, sub_region, rebuild_image=self.rebuild_image,
-                                    crop_width=orig_dims.width, crop_height=orig_dims.height)
+                                    crop_width=orig_dims.width, crop_height=orig_dims.height, logger=self.logger())
                 prune_annotations(new_item)
                 if not new_item.has_annotation():
                     self.logger().warning("No annotations attached")

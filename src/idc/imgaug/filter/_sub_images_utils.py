@@ -180,7 +180,7 @@ def extract_regions(item: ImageData, regions_lobj: List[LocatedObject], regions_
                 for ann_lobj in item.annotation:
                     ratio = region_lobj.overlap_ratio(ann_lobj)
                     if ((ratio > 0) and include_partial) or (ratio >= 1):
-                        new_objects.append(fit_located_object(region_index, region_lobj, ann_lobj, logger))
+                        new_objects.append(fit_located_object(region_index, region_lobj, ann_lobj, logger=logger, context=item.image_name))
             if not suppress_empty or (len(new_objects) > 0):
                 item_new = ObjectDetectionData(image_name=image_name_new, data=sub_bytes.getvalue(),
                                                annotation=LocatedObjects(new_objects), metadata=item.get_metadata())
@@ -254,7 +254,8 @@ def new_from_template(item, rebuild_image: bool = False):
 
 
 def transfer_region(full_image, sub_image, region: LocatedObject, rebuild_image: bool = False,
-                    crop_width: int = None, crop_height: int = None):
+                    crop_width: int = None, crop_height: int = None, logger: logging.Logger = None,
+                    context: str = None):
     """
     Transfers the sub image into the full image according to the region.
     Annotations get transferred as well.
@@ -269,6 +270,10 @@ def transfer_region(full_image, sub_image, region: LocatedObject, rebuild_image:
     :type crop_width: int
     :param crop_height: the height to crop to, ignored if None
     :type crop_height: int
+    :param logger: the optional logger instance to use
+    :type logger: logging.Logger
+    :param context: the optional context to use in the logging output
+    :type context: str
     """
     # transfer image
     if rebuild_image:
@@ -311,7 +316,7 @@ def transfer_region(full_image, sub_image, region: LocatedObject, rebuild_image:
                     fit = True
                 if fit:
                     region = LocatedObject(0, 0, img_width, img_height)
-                    new_lobj = fit_located_object(-1, region, new_lobj, None)
+                    new_lobj = fit_located_object(-1, region, new_lobj, logger=logger, context=context)
                 # add object
                 full_image.annotation.append(new_lobj)
 

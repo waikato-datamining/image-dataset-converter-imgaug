@@ -113,7 +113,8 @@ def read_images(input_files: List[str], reader: Reader) -> List[ImageData]:
     return result
 
 
-def merge_images(input_images: List[ImageData], coordinates: [List[Tuple[int, int]]], width: int, height: int, image_name: str) -> ImageData:
+def merge_images(input_images: List[ImageData], coordinates: [List[Tuple[int, int]]], width: int, height: int,
+                 image_name: str, logger: logging.Logger = None) -> ImageData:
     """
     Merges the images into a new one.
 
@@ -127,6 +128,8 @@ def merge_images(input_images: List[ImageData], coordinates: [List[Tuple[int, in
     :type height: int
     :param image_name: the name for the image
     :type image_name: str
+    :param logger: the optional logger instance to use
+    :type logger: logging.Logger
     :return: the combined image/annotations
     :rtype: ImageData
     """
@@ -139,7 +142,7 @@ def merge_images(input_images: List[ImageData], coordinates: [List[Tuple[int, in
 
     for coords, sub_image in zip(coordinates, input_images):
         region = LocatedObject(coords[0], coords[1], sub_image.image_width, sub_image.image_height)
-        transfer_region(result, sub_image, region, rebuild_image=True)
+        transfer_region(result, sub_image, region, rebuild_image=True, logger=logger, context=image_name)
 
     return result
 
@@ -217,7 +220,7 @@ def combine(input_files: List[str], group: str, x: str, y: str, width: int, heig
         gimages = read_images(gfiles, reader)
         gcoords = extract_coordinates(gfiles, x, y, one_based)
         image_name = group_id + "." + gimages[0].image_format.lower().replace("jpeg", "jpg")
-        combined = merge_images(gimages, gcoords, width, height, image_name)
+        combined = merge_images(gimages, gcoords, width, height, image_name, logger=_logger)
         prune_annotations(combined)
         if merge_adjacent_polygons and isinstance(combined, ObjectDetectionData):
             combined = merge_polygons(combined)
