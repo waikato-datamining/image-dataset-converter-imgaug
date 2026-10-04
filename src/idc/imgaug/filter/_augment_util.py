@@ -104,6 +104,9 @@ def augment_image(item: ImageData, pipeline, image_name: str = None, logger: log
     elif polys_aug is not None:
         objs_aug = []
         for i, poly in enumerate(polys_aug):
+            # skip empty ones
+            if len(poly.coords) < 3:
+                continue
             try:
                 # skip ones outside image
                 if poly.is_out_of_image(image_aug):
