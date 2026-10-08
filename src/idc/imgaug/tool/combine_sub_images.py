@@ -171,7 +171,8 @@ def write_image(combined: ImageData, writer: Writer):
 
 
 def combine(input_files: List[str], group: str, x: str, y: str, width: int, height: int, one_based: bool,
-            reader: str, writer: str, merge_adjacent_polygons: bool = False):
+            reader: str, writer: str, merge_adjacent_polygons: bool = False, max_dist_adjacent_polygons: float = 1.0,
+            max_slope_diff_adjacent_polygons: float = 1e-6):
     """
     Generates the regions and returns them. Either specify num_rows/num_cols or row_height/col_width.
 
@@ -195,6 +196,10 @@ def combine(input_files: List[str], group: str, x: str, y: str, width: int, heig
     :type writer: str
     :param merge_adjacent_polygons: whether to merge adjacent polygons (object detection only)
     :type merge_adjacent_polygons: bool
+    :param max_dist_adjacent_polygons: the maximum distance for considering polygons adjacent
+    :type max_dist_adjacent_polygons: float
+    :param max_slope_diff_adjacent_polygons: the maximum slope difference for considering polygons adjacent
+    :type max_slope_diff_adjacent_polygons: float
     """
     _logger.info("Instantiating reader: %s" % reader)
     reader = parse_reader(reader, available_readers())
@@ -223,7 +228,7 @@ def combine(input_files: List[str], group: str, x: str, y: str, width: int, heig
         combined = merge_images(gimages, gcoords, width, height, image_name, logger=_logger)
         prune_annotations(combined)
         if merge_adjacent_polygons and isinstance(combined, ObjectDetectionData):
-            combined = merge_polygons(combined)
+            combined = merge_polygons(combined, max_dist=max_dist_adjacent_polygons, max_slope_diff=max_slope_diff_adjacent_polygons)
         write_image(combined, writer)
 
 
@@ -248,12 +253,16 @@ def main(args=None):
     parser.add_argument("-1", "--one_based", action="store_true", help="Whether the coordinates are 1-based", required=False)
     parser.add_argument("-r", "--reader", metavar="CMDLINE", type=str, help="The reader command-line to use for reading the sub-images.", required=True, default=None)
     parser.add_argument("-m", "--merge_adjacent_polygons", action="store_true", help="Whether to merge adjacent polygons (object detection only).", required=False)
+    parser.add_argument("--max_dist_adjacent_polygons", type=float, default=1.0, help="The maximum distance between polygons for them to be considered adjacent.", required=False)
+    parser.add_argument("--max_slope_diff_adjacent_polygons", type=float, default=1e-6, help="The maximum slope difference between polygon sides for them to be considered adjacent.", required=False)
     parser.add_argument("-w", "--writer", metavar="CMDLINE", type=str, help="The writer command-line to use for writing the combined images, must contain parameters for storing the output.", required=True, default=None)
     add_logging_level(parser)
     parsed = parser.parse_args(args=args)
     set_logging_level(_logger, parsed.logging_level)
     combine(parsed.input, parsed.group, parsed.x, parsed.y, parsed.width, parsed.height, parsed.one_based,
-            parsed.reader, parsed.writer, merge_adjacent_polygons=parsed.merge_adjacent_polygons)
+            parsed.reader, parsed.writer, merge_adjacent_polygons=parsed.merge_adjacent_polygons,
+            max_dist_adjacent_polygons=parsed.max_dist_adjacent_polygons,
+            max_slope_diff_adjacent_polygons=parsed.max_slope_diff_adjacent_polygons)
 
 
 def sys_main() -> int:

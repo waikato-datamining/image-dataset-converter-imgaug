@@ -24,8 +24,9 @@ Changelog
 - added `simple-crop` filter for cropping images to the specified width/height
 - the filters `sub-images` and `meta-sub-images` now handle `DepthData` images as well
 - the `augment_image` function now takes an optional `logging.Logger` instance and is now more robust
-- the filter `meta-sub-images` now has the additional options `--max_dist_adjacent_polygons` and
-  `--max_slope_diff_adjacent_polygons` to better control what polygons are considered adjacent
+- filter `meta-sub-images` and tool `idc-combine-sub-images` now have the additional options
+  `--max_dist_adjacent_polygons` and `--max_slope_diff_adjacent_polygons` to better control what
+  polygons are considered adjacent
 
 
 0.1.0 (2025-10-31)

@@ -110,6 +110,8 @@ options:
 ```
 usage: idc-combine-sub-images [-h] -i INPUT [INPUT ...] -g REGEXP -x REGEXP -y
                               REGEXP -W WIDTH -H HEIGHT [-1] -r CMDLINE [-m]
+                              [--max_dist_adjacent_polygons MAX_DIST_ADJACENT_POLYGONS]
+                              [--max_slope_diff_adjacent_polygons MAX_SLOPE_DIFF_ADJACENT_POLYGONS]
                               -w CMDLINE
                               [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
 
@@ -120,8 +122,8 @@ options:
   -h, --help            show this help message and exit
   -i INPUT [INPUT ...], --input INPUT [INPUT ...]
                         Path to the report file(s) to read; glob syntax is
-                        supported; Supported placeholders: {HOME}, {CWD},
-                        {TMP} (default: None)
+                        supported; Supported variables: {HOME}, {CWD}, {TMP}
+                        (default: None)
   -g REGEXP, --group REGEXP
                         Regular expression for grouping the sub-images into
                         ones that belong to a single image (first group is
@@ -141,6 +143,12 @@ options:
   -m, --merge_adjacent_polygons
                         Whether to merge adjacent polygons (object detection
                         only). (default: False)
+  --max_dist_adjacent_polygons MAX_DIST_ADJACENT_POLYGONS
+                        The maximum distance between polygons for them to be
+                        considered adjacent. (default: 1.0)
+  --max_slope_diff_adjacent_polygons MAX_SLOPE_DIFF_ADJACENT_POLYGONS
+                        The maximum slope difference between polygon sides for
+                        them to be considered adjacent. (default: 1e-06)
   -w CMDLINE, --writer CMDLINE
                         The writer command-line to use for writing the
                         combined images, must contain parameters for storing
