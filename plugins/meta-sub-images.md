@@ -14,6 +14,8 @@ usage: meta-sub-images [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
                        [--overlap_bottom OVERLAP_BOTTOM]
                        [-s {none,x-then-y,y-then-x}] [-p] [-e] [-S SUFFIX]
                        [-b BASE_FILTER] [-B {cmdline,file}] [-R] [-m]
+                       [--max_dist_adjacent_polygons MAX_DIST_ADJACENT_POLYGONS]
+                       [--max_slope_diff_adjacent_polygons MAX_SLOPE_DIFF_ADJACENT_POLYGONS]
                        [--pad_width PAD_WIDTH] [--pad_height PAD_HEIGHT]
 
 Extracts sub-images (incl their annotations) from the images coming through,
@@ -74,6 +76,12 @@ options:
   -m, --merge_adjacent_polygons
                         Whether to merge adjacent polygons (object detection
                         only). (default: False)
+  --max_dist_adjacent_polygons MAX_DIST_ADJACENT_POLYGONS
+                        The maximum distance between polygons for them to be
+                        considered adjacent. (default: 1.0)
+  --max_slope_diff_adjacent_polygons MAX_SLOPE_DIFF_ADJACENT_POLYGONS
+                        The maximum slope difference between polygon sides for
+                        them to be considered adjacent. (default: 1e-06)
   --pad_width PAD_WIDTH
                         The width to pad the sub-images to (on the right).
                         (default: None)

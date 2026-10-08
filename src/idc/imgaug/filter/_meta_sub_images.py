@@ -24,8 +24,8 @@ class MetaSubImages(BatchFilter):
                  overlap_right: int = None, overlap_bottom: int = None, partial_sub_images: bool = False,
                  include_partial: bool = False, suppress_empty: bool = False, suffix: str = DEFAULT_SUFFIX,
                  base_filter: str = None, base_filter_format: str = None,
-                 rebuild_image: bool = False, merge_adjacent_polygons: bool = False,
-                 pad_width: int = None, pad_height: int = None,
+                 rebuild_image: bool = False, merge_adjacent_polygons: bool = False, max_dist_adjacent_polygons: float = None,
+                 max_slope_diff_adjacent_polygons: float = None, pad_width: int = None, pad_height: int = None,
                  logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initializes the filter.
@@ -58,6 +58,10 @@ class MetaSubImages(BatchFilter):
         :type rebuild_image: bool
         :param merge_adjacent_polygons: whether to merge adjacent polygons
         :type merge_adjacent_polygons: bool
+        :param max_dist_adjacent_polygons: the maximum distance for considering polygons adjacent
+        :type max_dist_adjacent_polygons: float
+        :param max_slope_diff_adjacent_polygons: the maximum slope difference for considering polygons adjacent
+        :type max_slope_diff_adjacent_polygons: float
         :param pad_width: the width to pad to, return as is if None
         :type pad_width: int
         :param pad_height: the height to pad to, return as is if None
@@ -84,6 +88,8 @@ class MetaSubImages(BatchFilter):
         self.base_filter_format = base_filter_format
         self.rebuild_image = rebuild_image
         self.merge_adjacent_polygons = merge_adjacent_polygons
+        self.max_dist_adjacent_polygons = max_dist_adjacent_polygons
+        self.max_slope_diff_adjacent_polygons = max_slope_diff_adjacent_polygons
         self.pad_width = pad_width
         self.pad_height = pad_height
         self._regions_xyxy = None
@@ -150,6 +156,8 @@ class MetaSubImages(BatchFilter):
         parser.add_argument("-B", "--base_filter_format", choices=PIPELINE_FORMATS, default=PIPELINE_FORMAT_CMDLINE, help="The format of the pipeline.")
         parser.add_argument("-R", "--rebuild_image", action="store_true", help="Rebuilds the image from the filtered sub-images rather than using the input image.", required=False)
         parser.add_argument("-m", "--merge_adjacent_polygons", action="store_true", help="Whether to merge adjacent polygons (object detection only).", required=False)
+        parser.add_argument("--max_dist_adjacent_polygons", type=float, default=1.0, help="The maximum distance between polygons for them to be considered adjacent.", required=False)
+        parser.add_argument("--max_slope_diff_adjacent_polygons", type=float, default=1e-6, help="The maximum slope difference between polygon sides for them to be considered adjacent.", required=False)
         parser.add_argument("--pad_width", type=int, default=None, help="The width to pad the sub-images to (on the right).", required=False)
         parser.add_argument("--pad_height", type=int, default=None, help="The height to pad the sub-images to (at the bottom).", required=False)
         return parser
@@ -178,6 +186,8 @@ class MetaSubImages(BatchFilter):
         self.base_filter_format = ns.base_filter_format
         self.rebuild_image = ns.rebuild_image
         self.merge_adjacent_polygons = ns.merge_adjacent_polygons
+        self.max_dist_adjacent_polygons = ns.max_dist_adjacent_polygons
+        self.max_slope_diff_adjacent_polygons = ns.max_slope_diff_adjacent_polygons
         self.pad_width = ns.pad_width
         self.pad_height = ns.pad_height
 
@@ -229,6 +239,10 @@ class MetaSubImages(BatchFilter):
             self.rebuild_image = False
         if self.merge_adjacent_polygons is None:
             self.merge_adjacent_polygons = False
+        if self.max_dist_adjacent_polygons is None:
+            self.max_dist_adjacent_polygons = 1.0
+        if self.max_slope_diff_adjacent_polygons is None:
+            self.max_slope_diff_adjacent_polygons = 1e-6
         if self.overlap_right is None:
             self.overlap_right = 0
         if self.overlap_bottom is None:
@@ -303,7 +317,7 @@ class MetaSubImages(BatchFilter):
                 if not new_item.has_annotation():
                     self.logger().warning("No annotations attached")
                 if self.merge_adjacent_polygons and isinstance(new_item, ObjectDetectionData):
-                    new_item = merge_polygons(new_item)
+                    new_item = merge_polygons(new_item, max_dist=self.max_dist_adjacent_polygons, max_slope_diff=self.max_slope_diff_adjacent_polygons)
                 result.append(new_item)
 
         return flatten_list(result)
