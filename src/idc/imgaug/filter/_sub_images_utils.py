@@ -280,6 +280,8 @@ def transfer_region(full_image, sub_image, region: LocatedObject, rebuild_image:
         cropped = crop_image(sub_image.image, crop_width=crop_width, crop_height=crop_height)
         full_image.image.paste(cropped, (region.x, region.y))
 
+    is_debug = (logger is not None) and logger.isEnabledFor(logging.DEBUG)
+
     # transfer annotations
     if sub_image.annotation is not None:
         # image classification (comma-separated list of labels)
@@ -294,6 +296,8 @@ def transfer_region(full_image, sub_image, region: LocatedObject, rebuild_image:
 
         # object detection (relocate located objects)
         elif isinstance(full_image, ObjectDetectionData):
+            if is_debug:
+                logger.debug("Transfer to region: %s" % str(region))
             img_width = full_image.image_width
             img_height = full_image.image_height
             for lobj in sub_image.annotation:
@@ -304,9 +308,13 @@ def transfer_region(full_image, sub_image, region: LocatedObject, rebuild_image:
                     new_lobj.set_polygon(WaiPolygon(*(WaiPoint(x, y) for x, y in zip(xs, ys))))
                 # skip objects to the right of the image
                 if new_lobj.x >= img_width:
+                    if is_debug:
+                        logger.debug("Skipping object beyond the right side of image: %s" % str(new_lobj))
                     continue
                 # skip objects below the bottom of the image
                 if new_lobj.y >= img_height:
+                    if is_debug:
+                        logger.debug("Skipping object below bottom of image: %s" % str(new_lobj))
                     continue
                 # fit object if necessary
                 fit = False
@@ -315,6 +323,8 @@ def transfer_region(full_image, sub_image, region: LocatedObject, rebuild_image:
                 if (new_lobj.y < img_height) and (new_lobj.y + new_lobj.height >= img_height):
                     fit = True
                 if fit:
+                    if is_debug:
+                        logger.debug("Fitting object: %s" % str(new_lobj))
                     region = LocatedObject(0, 0, img_width, img_height)
                     new_lobj = fit_located_object(-1, region, new_lobj, logger=logger, context=context)
                 # add object
@@ -322,6 +332,8 @@ def transfer_region(full_image, sub_image, region: LocatedObject, rebuild_image:
 
         # image segmentation
         elif isinstance(full_image, ImageSegmentationData):
+            if is_debug:
+                logger.debug("Transfer to region: %s" % str(region))
             for label in sub_image.annotation.layers:
                 x = region.x
                 y = region.y
@@ -336,6 +348,8 @@ def transfer_region(full_image, sub_image, region: LocatedObject, rebuild_image:
 
         # depth
         elif isinstance(full_image, DepthInformation):
+            if is_debug:
+                logger.debug("Transfer to region: %s" % str(region))
             x = region.x
             y = region.y
             w = region.width
