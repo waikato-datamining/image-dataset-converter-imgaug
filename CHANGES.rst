@@ -27,6 +27,8 @@ Changelog
 - filter `meta-sub-images` and tool `idc-combine-sub-images` now have the additional options
   `--max_dist_adjacent_polygons` and `--max_slope_diff_adjacent_polygons` to better control what
   polygons are considered adjacent
+- fixed a critical bug in `transfer_region`, no longer accidentally overwriting the region to transfer
+  into when having to fit objects within the overall image
 
 
 0.1.0 (2025-10-31)
