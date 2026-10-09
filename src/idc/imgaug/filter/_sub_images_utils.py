@@ -325,8 +325,8 @@ def transfer_region(full_image, sub_image, region: LocatedObject, rebuild_image:
                 if fit:
                     if is_debug:
                         logger.debug("Fitting object: %s" % str(new_lobj))
-                    region = LocatedObject(0, 0, img_width, img_height)
-                    new_lobj = fit_located_object(-1, region, new_lobj, logger=logger, context=context)
+                    image_bounds = LocatedObject(0, 0, img_width, img_height)
+                    new_lobj = fit_located_object(-1, image_bounds, new_lobj, logger=logger, context=context)
                 # add object
                 full_image.annotation.append(new_lobj)
 
