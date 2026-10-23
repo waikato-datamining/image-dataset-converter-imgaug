@@ -7,16 +7,16 @@ Extracts sub-images (incl their annotations) from the images coming through, usi
 
 ```
 usage: meta-sub-images [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
-                       [-N LOGGER_NAME] [--skip] [-r [REGIONS ...]]
-                       [--num_rows NUM_ROWS] [--num_cols NUM_COLS]
-                       [--row_height ROW_HEIGHT] [--col_width COL_WIDTH]
-                       [--partial_sub_images] [--overlap_right OVERLAP_RIGHT]
-                       [--overlap_bottom OVERLAP_BOTTOM]
-                       [-s {none,x-then-y,y-then-x}] [-p] [-e] [-S SUFFIX]
-                       [-b BASE_FILTER] [-B {cmdline,file}] [-R] [-m]
-                       [--max_dist_adjacent_polygons MAX_DIST_ADJACENT_POLYGONS]
-                       [--max_slope_diff_adjacent_polygons MAX_SLOPE_DIFF_ADJACENT_POLYGONS]
-                       [--pad_width PAD_WIDTH] [--pad_height PAD_HEIGHT]
+                       [-N LOGGER_NAME] [--skip] [-r [REGION ...]]
+                       [--num_rows ROWS] [--num_cols COLS]
+                       [--row_height HEIGHT] [--col_width WIDTH]
+                       [--partial_sub_images] [--overlap_right RIGHT]
+                       [--overlap_bottom BOTTOM] [-s {none,x-then-y,y-then-x}]
+                       [-p] [--min_partial_iou IOU] [-e] [-S SUFFIX] [-b FLOW]
+                       [-B {cmdline,file}] [-R] [-m]
+                       [--max_dist_adjacent_polygons DIST]
+                       [--max_slope_diff_adjacent_polygons SLOPE_DIFF]
+                       [--pad_width WIDTH] [--pad_height HEIGHT]
 
 Extracts sub-images (incl their annotations) from the images coming through,
 using the defined regions or #rows/cols, and passes them through the base
@@ -31,25 +31,23 @@ options:
                         name by default (default: None)
   --skip                Disables the plugin, removing it from the pipeline.
                         (default: False)
-  -r [REGIONS ...], --regions [REGIONS ...]
+  -r [REGION ...], --regions [REGION ...]
                         The regions (X,Y,WIDTH,HEIGHT) to crop and forward
                         with their annotations (0-based coordinates) (default:
                         None)
-  --num_rows NUM_ROWS   The number of rows, if no regions defined. (default:
+  --num_rows ROWS       The number of rows, if no regions defined. (default:
                         None)
-  --num_cols NUM_COLS   The number of columns, if no regions defined.
+  --num_cols COLS       The number of columns, if no regions defined.
                         (default: None)
-  --row_height ROW_HEIGHT
-                        The height of rows. (default: None)
-  --col_width COL_WIDTH
-                        The width of columns. (default: None)
+  --row_height HEIGHT   The height of rows. (default: None)
+  --col_width WIDTH     The width of columns. (default: None)
   --partial_sub_images  Whether to use sub-images that don't have the required
                         --col_width/--row_height (default: False)
-  --overlap_right OVERLAP_RIGHT
+  --overlap_right RIGHT
                         The overlap between two images (on the right of the
                         left-most image), if no regions defined, gets added to
                         the sub-image width. (default: 0)
-  --overlap_bottom OVERLAP_BOTTOM
+  --overlap_bottom BOTTOM
                         The overlap between two images (on the bottom of the
                         top-most image), if no regions defined, gets added to
                         the sub-image height. (default: 0)
@@ -57,8 +55,14 @@ options:
                         How to sort the supplied region definitions (default:
                         none)
   -p, --include_partial
-                        Whether to include only annotations that fit fully
-                        into a region or also partial ones (default: False)
+                        Whether to include only objdet annotations that fit
+                        fully into a region or also partial ones (default:
+                        False)
+  --min_partial_iou IOU
+                        When including partial object detection annotations,
+                        the partial ones must have at least this IoU to be
+                        included; uses polygon as basis if available,
+                        otherwise the bounding box. (default: 0.0)
   -e, --suppress_empty  Suppresses sub-images that have no annotations
                         (default: False)
   -S SUFFIX, --suffix SUFFIX
@@ -66,7 +70,7 @@ options:
                         images, available placeholders:
                         {X}|{Y}|{W}|{H}|{X0}|{Y0}|{X1}|{Y1}|{INDEX} (default:
                         -{INDEX})
-  -b BASE_FILTER, --base_filter BASE_FILTER
+  -b FLOW, --base_filter FLOW
                         The subflow with filter(s) to execute. (default:
                         passthrough)
   -B {cmdline,file}, --base_filter_format {cmdline,file}
@@ -76,16 +80,14 @@ options:
   -m, --merge_adjacent_polygons
                         Whether to merge adjacent polygons (object detection
                         only). (default: False)
-  --max_dist_adjacent_polygons MAX_DIST_ADJACENT_POLYGONS
+  --max_dist_adjacent_polygons DIST
                         The maximum distance between polygons for them to be
                         considered adjacent. (default: 1.0)
-  --max_slope_diff_adjacent_polygons MAX_SLOPE_DIFF_ADJACENT_POLYGONS
+  --max_slope_diff_adjacent_polygons SLOPE_DIFF
                         The maximum slope difference between polygon sides for
                         them to be considered adjacent. (default: 1e-06)
-  --pad_width PAD_WIDTH
-                        The width to pad the sub-images to (on the right).
+  --pad_width WIDTH     The width to pad the sub-images to (on the right).
                         (default: None)
-  --pad_height PAD_HEIGHT
-                        The height to pad the sub-images to (at the bottom).
+  --pad_height HEIGHT   The height to pad the sub-images to (at the bottom).
                         (default: None)
 ```

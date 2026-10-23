@@ -29,6 +29,9 @@ Changelog
   polygons are considered adjacent
 - fixed a critical bug in `transfer_region`, no longer accidentally overwriting the region to transfer
   into when having to fit objects within the overall image
+- filters `sub-images` and `meta-sub-images` now have the `--min_partial_iou` parameter that
+  sets the threshold for including partial objdet annotations rather than all; allows skipping of
+  small slithers of annotations
 
 
 0.1.0 (2025-10-31)

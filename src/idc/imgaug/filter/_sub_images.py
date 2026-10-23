@@ -19,7 +19,7 @@ class SubImages(BatchFilter):
                  num_rows: int = None, num_cols: int = None, row_height: int = None, col_width: int = None,
                  overlap_right: int = None, overlap_bottom: int = None, partial_sub_images: bool = False,
                  include_partial: bool = False, suppress_empty: bool = False, suffix: str = DEFAULT_SUFFIX,
-                 pad_width: int = None, pad_height: int = None,
+                 pad_width: int = None, pad_height: int = None, min_partial_iou: float = None,
                  logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initializes the filter.
@@ -42,7 +42,7 @@ class SubImages(BatchFilter):
         :type overlap_bottom: int
         :param partial_sub_images: whether to use sub-images that don't have required col_width/row_height
         :type partial_sub_images: bool
-        :param include_partial: whether to include only annotations that fit fully into a region or also partial ones
+        :param include_partial: whether to include only annotations that fit fully into a region or also partial ones (objdet)
         :type include_partial: bool
         :param suppress_empty: suppresses sub-images that have no annotations (object detection)
         :type suppress_empty: bool
@@ -52,6 +52,8 @@ class SubImages(BatchFilter):
         :type pad_width: int
         :param pad_height: the height to pad to, return as is if None
         :type pad_height: int
+        :param min_partial_iou: when including partial objdet annotations, only keep if IoU between partial and full objdet is at least this threshold, ignored if 0
+        :type min_partial_iou: float
         :param logger_name: the name to use for the logger
         :type logger_name: str
         :param logging_level: the logging level to use
@@ -72,6 +74,7 @@ class SubImages(BatchFilter):
         self.suffix = suffix
         self.pad_width = pad_width
         self.pad_height = pad_height
+        self.min_partial_iou = min_partial_iou
         self._regions_xyxy = None
         self._regions_lobj = None
 
@@ -120,20 +123,21 @@ class SubImages(BatchFilter):
         :rtype: argparse.ArgumentParser
         """
         parser = super()._create_argparser()
-        parser.add_argument("-r", "--regions", type=str, default=None, help="The regions (X,Y,WIDTH,HEIGHT) to crop and forward with their annotations (0-based coordinates)", required=False, nargs="*")
-        parser.add_argument("--num_rows", type=int, help="The number of rows, if no regions defined.", default=None, required=False)
-        parser.add_argument("--num_cols", type=int, help="The number of columns, if no regions defined.", default=None, required=False)
-        parser.add_argument("--row_height", type=int, help="The height of rows.", default=None, required=False)
-        parser.add_argument("--col_width", type=int, help="The width of columns.", default=None, required=False)
+        parser.add_argument("-r", "--regions", metavar="REGION", type=str, default=None, help="The regions (X,Y,WIDTH,HEIGHT) to crop and forward with their annotations (0-based coordinates)", required=False, nargs="*")
+        parser.add_argument("--num_rows", metavar="ROWS", type=int, help="The number of rows, if no regions defined.", default=None, required=False)
+        parser.add_argument("--num_cols", metavar="COLS", type=int, help="The number of columns, if no regions defined.", default=None, required=False)
+        parser.add_argument("--row_height", metavar="HEIGHT", type=int, help="The height of rows.", default=None, required=False)
+        parser.add_argument("--col_width", metavar="WIDTH", type=int, help="The width of columns.", default=None, required=False)
         parser.add_argument("--partial_sub_images", action="store_true", help="Whether to use sub-images that don't have the required --col_width/--row_height", required=False)
-        parser.add_argument("--overlap_right", type=int, help="The overlap between two images (on the right of the left-most image), if no regions defined, gets added to the sub-image width.", default=0, required=False)
-        parser.add_argument("--overlap_bottom", type=int, help="The overlap between two images (on the bottom of the top-most image), if no regions defined, gets added to the sub-image width.", default=0, required=False)
+        parser.add_argument("--overlap_right", metavar="RIGHT", type=int, help="The overlap between two images (on the right of the left-most image), if no regions defined, gets added to the sub-image width.", default=0, required=False)
+        parser.add_argument("--overlap_bottom", metavar="BOTTOM", type=int, help="The overlap between two images (on the bottom of the top-most image), if no regions defined, gets added to the sub-image width.", default=0, required=False)
         parser.add_argument("-s", "--region_sorting", choices=REGION_SORTING, default=REGION_SORTING_NONE, help="How to sort the supplied region definitions", required=False)
-        parser.add_argument("-p", "--include_partial", action="store_true", help="Whether to include only annotations that fit fully into a region or also partial ones", required=False)
+        parser.add_argument("-p", "--include_partial", action="store_true", help="Whether to include only objdet annotations that fit fully into a region or also partial ones", required=False)
+        parser.add_argument("--min_partial_iou", metavar="IOU", type=float, default=0.0, help="When including partial object detection annotations, the partial ones must have at least this IoU to be included; uses polygon as basis if available, otherwise the bounding box.", required=False)
         parser.add_argument("-e", "--suppress_empty", action="store_true", help="Suppresses sub-images that have no annotations", required=False)
-        parser.add_argument("-S", "--suffix", type=str, default=DEFAULT_SUFFIX, help="The suffix pattern to use for the generated sub-images, available placeholders: " + "|".join(PLACEHOLDERS), required=False)
-        parser.add_argument("--pad_width", type=int, default=None, help="The width to pad the sub-images to (on the right).", required=False)
-        parser.add_argument("--pad_height", type=int, default=None, help="The height to pad the sub-images to (at the bottom).", required=False)
+        parser.add_argument("-S", "--suffix", metavar="SUFFIX", type=str, default=DEFAULT_SUFFIX, help="The suffix pattern to use for the generated sub-images, available placeholders: " + "|".join(PLACEHOLDERS), required=False)
+        parser.add_argument("--pad_width", metavar="WIDTH", type=int, default=None, help="The width to pad the sub-images to (on the right).", required=False)
+        parser.add_argument("--pad_height", metavar="HEIGHT", type=int, default=None, help="The height to pad the sub-images to (at the bottom).", required=False)
         return parser
 
     def _apply_args(self, ns: argparse.Namespace):
@@ -154,6 +158,7 @@ class SubImages(BatchFilter):
         self.overlap_right = ns.overlap_right
         self.overlap_bottom = ns.overlap_bottom
         self.include_partial = ns.include_partial
+        self.min_partial_iou = ns.min_partial_iou
         self.suppress_empty = ns.suppress_empty
         self.suffix = ns.suffix
         self.pad_width = ns.pad_width
@@ -181,6 +186,8 @@ class SubImages(BatchFilter):
             self.partial_sub_images = False
         if self.include_partial is None:
             self.include_partial = False
+        if self.min_partial_iou is None:
+            self.min_partial_iou = 0.0
         if self.suppress_empty is None:
             self.suppress_empty = False
         if self.suffix is None:
@@ -225,7 +232,8 @@ class SubImages(BatchFilter):
                 regions_lobj, regions_xyxy = parse_regions(regions_str.split(" "), self.region_sorting, self.logger())
             sub_items = extract_regions(item, regions_lobj, regions_xyxy, self.suffix,
                                         self.suppress_empty, self.include_partial, self.logger(),
-                                        pad_width=self.pad_width, pad_height=self.pad_height)
+                                        pad_width=self.pad_width, pad_height=self.pad_height,
+                                        min_partial_iou=self.min_partial_iou)
             # failed to process?
             if sub_items is None:
                 result.append(item)

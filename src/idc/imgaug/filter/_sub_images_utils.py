@@ -9,7 +9,7 @@ from wai.common.geometry import Point as WaiPoint, Polygon as WaiPolygon
 
 from idc.api import ImageSegmentationAnnotations, ImageClassificationData, ImageSegmentationData, ObjectDetectionData, \
     ImageData, crop_image, pad_image, fit_layers, fit_located_object, array_to_image, empty_image, DepthData, \
-    fit_matrix, DepthInformation
+    fit_matrix, DepthInformation, intersect_over_union, locatedobject_polygon_to_shapely, locatedobject_bbox_to_shapely
 
 REGION_SORTING_NONE = "none"
 REGION_SORTING_XY = "x-then-y"
@@ -121,7 +121,8 @@ def region_filename(path: str, regions_lobj: List[LocatedObject], regions_xyxy: 
 
 def extract_regions(item: ImageData, regions_lobj: List[LocatedObject], regions_xyxy: List[Tuple], suffix: str,
                     suppress_empty: bool, include_partial: bool, logger: logging.Logger,
-                    pad_width: Optional[int] = None, pad_height: Optional[int] = None) -> Optional[List[Tuple[LocatedObject, ImageData, LocatedObject]]]:
+                    pad_width: Optional[int] = None, pad_height: Optional[int] = None,
+                    min_partial_iou: float = 0.0) -> Optional[List[Tuple[LocatedObject, ImageData, LocatedObject]]]:
     """
     Processes the image according to the defined regions and returns a list of tuples consisting of the located
     object for the region and the new image/annotations.
@@ -136,7 +137,7 @@ def extract_regions(item: ImageData, regions_lobj: List[LocatedObject], regions_
     :type suffix: str
     :param suppress_empty: whether to suppress sub-images with no annotations
     :type suppress_empty: bool
-    :param include_partial: whether to include partial annotations (ones that get cut off by the region)
+    :param include_partial: whether to include partial objdet annotations (ones that get cut off by the region)
     :type include_partial: bool
     :param logger: for logging purposes
     :type logger: logging.Logger
@@ -145,6 +146,8 @@ def extract_regions(item: ImageData, regions_lobj: List[LocatedObject], regions_
     :param pad_height: the height to pad to, return as is if None
     :type pad_height: int
     :return: the list of tuples (located object of region, new image, located object of original dims)
+    :param min_partial_iou: when including partial objdet annotations, only keep if IoU between partial and full objdet is at least this threshold, ignored if 0
+    :type min_partial_iou: float
     :rtype: list
     """
     result = []
@@ -180,7 +183,16 @@ def extract_regions(item: ImageData, regions_lobj: List[LocatedObject], regions_
                 for ann_lobj in item.annotation:
                     ratio = region_lobj.overlap_ratio(ann_lobj)
                     if ((ratio > 0) and include_partial) or (ratio >= 1):
-                        new_objects.append(fit_located_object(region_index, region_lobj, ann_lobj, logger=logger, context=item.image_name + "/" + str(ann_lobj)))
+                        ann_lobj_new = fit_located_object(region_index, region_lobj, ann_lobj, logger=logger, context=item.image_name + "/" + str(ann_lobj))
+                        if (ratio < 1) and (min_partial_iou > 0):
+                            ann_lobj_part = fit_located_object(region_index, region_lobj, ann_lobj, relocate=False, logger=logger, context=item.image_name + "/" + str(ann_lobj))
+                            poly_full = locatedobject_polygon_to_shapely(ann_lobj)
+                            poly_part = locatedobject_polygon_to_shapely(ann_lobj_part)
+                            iou = intersect_over_union(poly_part, poly_full)
+                            if iou >= min_partial_iou:
+                                new_objects.append(ann_lobj_new)
+                        else:
+                            new_objects.append(ann_lobj_new)
             if not suppress_empty or (len(new_objects) > 0):
                 item_new = ObjectDetectionData(image_name=image_name_new, data=sub_bytes.getvalue(),
                                                annotation=LocatedObjects(new_objects), metadata=item.get_metadata())
