@@ -37,6 +37,7 @@ setup(
         "simple_mask_utils==0.0.1",
         "opencv-contrib-python",
         "pyzbar",
+        "sahi",
     ],
     version="0.1.0",
     author='Peter Reutemann',

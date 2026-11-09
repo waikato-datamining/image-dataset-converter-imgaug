@@ -1,15 +1,20 @@
 import logging
 import os
 from dataclasses import dataclass
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict, Any
 
 import numpy as np
 from wai.common.adams.imaging.locateobjects import LocatedObject, LocatedObjects
 from wai.common.geometry import Point as WaiPoint, Polygon as WaiPolygon
+from shapely.geometry import box
+from shapely.geometry.base import BaseGeometry
+from shapely.ops import unary_union
+from shapely.strtree import STRtree
 
 from idc.api import ImageSegmentationAnnotations, ImageClassificationData, ImageSegmentationData, ObjectDetectionData, \
     ImageData, crop_image, pad_image, fit_layers, fit_located_object, array_to_image, empty_image, DepthData, \
-    fit_matrix, DepthInformation, intersect_over_union, locatedobject_polygon_to_shapely, locatedobject_bbox_to_shapely
+    fit_matrix, DepthInformation, intersect_over_union, locatedobject_polygon_to_shapely, shapely_to_polygon, \
+    get_object_label
 
 REGION_SORTING_NONE = "none"
 REGION_SORTING_XY = "x-then-y"
@@ -637,3 +642,296 @@ def locatedobject_to_xyxy(lobj: LocatedObject) -> Tuple[int, int, int, int]:
     :rtype: tuple
     """
     return lobj.x, lobj.y, lobj.x + lobj.width - 1, lobj.y + lobj.height - 1
+
+
+@dataclass
+class Detection:
+    bbox: np.ndarray
+    score: float
+    category_id: int
+    polygon: Optional[BaseGeometry] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+    @property
+    def geometry(self):
+        if self.polygon is not None:
+            return self.polygon
+        return box(*self.bbox)
+
+
+def locatedobject_to_detection(lobj: LocatedObject, categories: Dict[str, int]) -> Detection:
+    """
+    Turns a LocatedObject into a Detection one.
+
+    :param lobj: the object to convert
+    :type lobj: LocatedObject
+    :param categories: the category/label lookup to use/expand
+    :type categories: dict
+    :return: the Detection object
+    :rtype: Detection
+    """
+    try:
+        score = float(lobj.metadata["score"]) if ("score" in lobj.metadata) else 1.0
+    except:
+        score = 1.0
+    label = get_object_label(lobj)
+    if label not in categories:
+        categories[label] = len(categories)
+    polygon = None
+    if lobj.has_polygon():
+        polygon = locatedobject_polygon_to_shapely(lobj)
+    return Detection(bbox=np.asarray(locatedobject_to_xyxy(lobj)),
+                     score=score, category_id=categories[label],
+                     polygon=polygon, metadata=lobj.metadata.copy())
+
+
+def reverse_categories_lookup(categories: Dict[str, int]) -> Dict[int, str]:
+    """
+    Generates a reverse lookup.
+
+    :param categories: the categories lookup to invert.
+    :type categories: dict
+    :return: the new lookup
+    :rtype: dict
+    """
+    result = dict()
+    for k, v in categories.items():
+        result[v] = k
+    return result
+
+
+def detection_to_locatedobject(detection: Detection, categories: Dict[int, str]) -> LocatedObject:
+    """
+    Turns the detection object back into a located one.
+
+    :param detection: the object to convert
+    :type detection: Detection
+    :param categories: the lookup for the categories
+    :type categories: dict
+    :return: the converted object
+    :rtype: LocatedObject
+    """
+    x0, y0, x1, y1 = detection.bbox
+    if detection.metadata is None:
+        meta = {"type": categories[detection.category_id]}
+    else:
+        meta = detection.metadata.copy()
+        if "type" not in meta:
+            meta["type"] = categories[detection.category_id]
+    result = LocatedObject(x0, y0, x1-x0+1, y1-y0+1, **meta)
+    if detection.polygon is not None:
+        poly = shapely_to_polygon(detection.polygon)
+        result.set_polygon(poly)
+    return result
+
+
+def bbox_ios(box_a, box_b) -> float:
+    """
+    Intersection over Smaller (IoS).
+
+    :param box_a: first bounding box
+    :param box_b: second bounding box
+    :return: IoS
+    :rtype: float
+    """
+    xa1, ya1, xa2, ya2 = box_a
+    xb1, yb1, xb2, yb2 = box_b
+
+    ix1 = max(xa1, xb1)
+    iy1 = max(ya1, yb1)
+    ix2 = min(xa2, xb2)
+    iy2 = min(ya2, yb2)
+
+    iw = max(0.0, ix2 - ix1)
+    ih = max(0.0, iy2 - iy1)
+
+    inter = iw * ih
+
+    area_a = max(0.0, xa2 - xa1) * max(0.0, ya2 - ya1)
+    area_b = max(0.0, xb2 - xb1) * max(0.0, yb2 - yb1)
+
+    smaller = min(area_a, area_b)
+
+    if smaller <= 0:
+        return 0.0
+
+    return inter / smaller
+
+
+def polygon_ios(geom_a: BaseGeometry, geom_b: BaseGeometry) -> float:
+    """
+    Polygon Intersection over Smaller (IoS).
+
+    :param geom_a: first polygon/bbox
+    :param geom_b: second polygon/bbox
+    :return: the IoS value
+    :rtype: float
+    """
+    if geom_a.is_empty or geom_b.is_empty:
+        return 0.0
+
+    inter_area = geom_a.intersection(geom_b).area
+    smaller_area = min(geom_a.area, geom_b.area)
+
+    if smaller_area <= 0:
+        return 0.0
+
+    return inter_area / smaller_area
+
+
+class UnionFind:
+
+    def __init__(self, n):
+        self.parent = list(range(n))
+
+    def find(self, x):
+        while self.parent[x] != x:
+            self.parent[x] = self.parent[self.parent[x]]
+            x = self.parent[x]
+        return x
+
+    def union(self, a, b):
+        ra = self.find(a)
+        rb = self.find(b)
+        if ra != rb:
+            self.parent[rb] = ra
+
+
+def build_clusters(detections: List[Detection], ios_threshold: float = 0.5):
+    """
+    Build connected components using STRtree and IoS.
+
+    :param detections: the list of detections
+    :type detections: list
+    :param ios_threshold: the IoS threshold to use
+    :type ios_threshold: float
+    """
+    geometries = [det.geometry for det in detections]
+    tree = STRtree(geometries)
+    uf = UnionFind(len(detections))
+
+    for idx, det in enumerate(detections):
+        candidate_indices = tree.query(det.geometry)
+        for j in candidate_indices:
+            j = int(j)
+            if j <= idx:
+                continue
+
+            other = detections[j]
+            if det.category_id != other.category_id:
+                continue
+
+            if (det.polygon is not None) and (other.polygon is not None):
+                overlap = polygon_ios(det.polygon, other.polygon)
+            else:
+                overlap = bbox_ios(det.bbox, other.bbox)
+            if overlap >= ios_threshold:
+                uf.union(idx, j)
+
+    clusters = {}
+    for idx in range(len(detections)):
+        root = uf.find(idx)
+        if root not in clusters:
+            clusters[root] = []
+        clusters[root].append(idx)
+
+    return list(clusters.values())
+
+
+def merge_cluster(cluster_indices: List[int], detections: List[Detection]) -> Detection:
+    """
+    Merge detections in one connected component.
+
+    :param cluster_indices: the indices of the detection to merge
+    :type cluster_indices: list
+    :param detections: the full list of detections
+    :type: list
+    :return: the merged detection
+    :rtype: Detection
+    """
+    cluster = [detections[i] for i in cluster_indices]
+    best = max(cluster, key=lambda d: d.score)
+    polygons = [
+        det.polygon
+        for det in cluster
+        if det.polygon is not None
+    ]
+
+    merged_geometry = None
+    if len(polygons) > 0:
+        merged_geometry = unary_union(polygons)
+        minx, miny, maxx, maxy = merged_geometry.bounds
+        merged_bbox = np.array([minx, miny, maxx, maxy], dtype=np.float32)
+    else:
+        boxes = np.stack([det.bbox for det in cluster])
+        merged_bbox = np.array(
+            [
+                boxes[:, 0].min(),
+                boxes[:, 1].min(),
+                boxes[:, 2].max(),
+                boxes[:, 3].max(),
+            ],
+            dtype=np.float32,
+        )
+
+    return Detection(
+        bbox=merged_bbox,
+        score=best.score,
+        category_id=best.category_id,
+        polygon=merged_geometry,
+    )
+
+
+def merge_detections(detections: List[Detection], ios_threshold: float = 0.5):
+    """
+    Merge all overlapping detections.
+
+    :param detections: the detections to merge
+    :type detections: list
+    :param ios_threshold: the IoS threshold to use
+    :type ios_threshold: float
+    :return: the merged detections
+    :rtype: list
+    """
+    if len(detections) == 0:
+        return []
+
+    clusters = build_clusters(detections, ios_threshold=ios_threshold)
+    merged = [merge_cluster(cluster, detections) for cluster in clusters]
+
+    return merged
+
+
+def polygon_nms(detections: List[Detection], ios_threshold: float = 0.7) -> List[Detection]:
+    """
+    Removes overlapping polygons.
+
+    :param detections: the detections to process
+    :type detections: list
+    :param ios_threshold: the IoS threshold to use
+    :type ios_threshold: float
+    :return: the updated list of detections
+    :rtype: list
+    """
+    detections = sorted(
+        detections,
+        key=lambda d: d.score,
+        reverse=True,
+    )
+
+    keep = []
+    while detections:
+        best = detections.pop(0)
+        keep.append(best)
+        remaining = []
+        for det in detections:
+            if (det.polygon is not None) and (best.polygon is not None):
+                overlap = polygon_ios(best.polygon, det.polygon)
+            else:
+                overlap = bbox_ios(best.bbox, det.bbox)
+            if overlap < ios_threshold:
+                remaining.append(det)
+
+        detections = remaining
+
+    return keep

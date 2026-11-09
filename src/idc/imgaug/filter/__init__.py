@@ -19,10 +19,12 @@ from ._gaussian_blur import GaussianBlur
 from ._hsl_grayscale import HSLGrayScale
 from ._hough_lines_prob import HoughLinesProbabilistic
 from ._linear_contrast import LinearContrast
+from ._merge_overlapping_polygons import MergeOverlappingPolygons
 from ._merge_segmentation_layers import MergeSegmentationLayers, MERGE_OPERATIONS, MERGE_OPERATION_ADD, MERGE_OPERATION_SUBTRACT
 from ._meta_sub_images import MetaSubImages
 from ._overlay_regions import OverlayRegions
 from ._pad import Pad
+from ._remove_overlapping_polygons import RemoveOverlappingPolygons
 from ._resize import Resize
 from ._roi_images import RegionOfInterestImages
 from ._rotate import Rotate
@@ -32,6 +34,8 @@ from ._simple_crop import SimpleCrop
 from ._sub_images import SubImages
 from ._sub_images_utils import (parse_regions, new_from_template, extract_regions, transfer_region, prune_annotations, region_filename,
                                 PLACEHOLDERS, REGION_SORTING, REGION_SORTING_XY, REGION_SORTING_YX, REGION_SORTING_NONE, DEFAULT_SUFFIX,
-                                Region, generate_regions, regions_to_string, locatedobject_to_region, locatedobject_to_xyxy)
+                                Region, generate_regions, regions_to_string, locatedobject_to_region, locatedobject_to_xyxy,
+                                Detection, UnionFind, merge_cluster, merge_detections, build_clusters, bbox_ios, polygon_ios, polygon_nms,
+                                locatedobject_to_detection, detection_to_locatedobject, reverse_categories_lookup)
 from ._thinning import Thinning
 from ._trace_skeleton import TraceSkeleton
