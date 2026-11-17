@@ -3,16 +3,16 @@
 * accepts: idc.api.ObjectDetectionData
 * generates: idc.api.ObjectDetectionData
 
-Extracts sub-images using the bbox of all the object detection annotations that have matching labels. If no labels are specified, all annotations are extracted.
+Extracts sub-images using the bbox of all the object detection annotations that have matching labels. If no labels are specified, all annotations are extracted. For polygons, the background outside the polygon can be blanked.
 
 ```
 usage: roi-images [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
                   [-N LOGGER_NAME] [--skip] [--labels [LABELS ...]]
-                  [-S SUFFIX]
+                  [-S SUFFIX] [-f] [-b]
 
 Extracts sub-images using the bbox of all the object detection annotations
 that have matching labels. If no labels are specified, all annotations are
-extracted.
+extracted. For polygons, the background outside the polygon can be blanked.
 
 options:
   -h, --help            show this help message and exit
@@ -32,4 +32,10 @@ options:
                         images, available placeholders:
                         {X}|{Y}|{W}|{H}|{X0}|{Y0}|{X1}|{Y1}|{INDEX} (default:
                         -{INDEX})
+  -f, --skip_failed     Removes images with no annotations or when failing to
+                        extract objects. (default: False)
+  -b, --blank_background
+                        In case of polygon annotations, this flag enables
+                        removing the background outside of the polygon.
+                        (default: False)
 ```

@@ -34,6 +34,7 @@ Changelog
   small slithers of annotations
 - added filter `merge-overlapping-polygons` for merging overlapping polygons (with the same label)
 - added filter `remove-overlapping-polygons` for removing overlapping polygons
+- the `roi-images` filter now allows removing the background outside of polygon annotations
 
 
 0.1.0 (2025-10-31)
