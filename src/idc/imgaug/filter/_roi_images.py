@@ -2,10 +2,11 @@ import argparse
 from typing import List
 
 from PIL import Image, ImageDraw
+from wai.common.adams.imaging.locateobjects import LocatedObjects
 from wai.logging import LOGGING_WARNING
 
 from seppl.io import BatchFilter
-from kasperl.api import make_list, flatten_list
+from kasperl.api import make_list, flatten_list, safe_deepcopy
 from idc.api import ObjectDetectionData, ImageData
 from idc.imgaug.filter._sub_images_utils import PLACEHOLDERS, DEFAULT_SUFFIX, \
     extract_regions, locatedobject_to_xyxy
@@ -145,7 +146,9 @@ class RegionOfInterestImages(BatchFilter):
                 # create composite
                 im_new = Image.composite(im, background, mask)
                 # assemble output
-                item_new = item.duplicate(image=im_new)
+                ann_new = LocatedObjects()
+                ann_new.append(safe_deepcopy(lobj))
+                item_new = item.duplicate(image=im_new, annotation=ann_new)
                 return item_new
             break
 
