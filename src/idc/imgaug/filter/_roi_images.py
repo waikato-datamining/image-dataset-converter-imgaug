@@ -201,7 +201,6 @@ class RegionOfInterestImages(BatchFilter):
                     result.append(item)
             else:
                 for _, sub_item, _ in sub_items:
-                    print("#ann:", len(sub_item.annotation))
                     if self.blank_background:
                         sub_item = self._remove_background(sub_item)
                     result.append(sub_item)
