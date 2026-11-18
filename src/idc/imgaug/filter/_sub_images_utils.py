@@ -15,6 +15,7 @@ from idc.api import ImageSegmentationAnnotations, ImageClassificationData, Image
     ImageData, crop_image, pad_image, fit_layers, fit_located_object, array_to_image, empty_image, DepthData, \
     fit_matrix, DepthInformation, intersect_over_union, locatedobject_polygon_to_shapely, shapely_to_polygon, \
     get_object_label
+from kasperl.api import safe_deepcopy
 
 REGION_SORTING_NONE = "none"
 REGION_SORTING_XY = "x-then-y"
@@ -189,7 +190,7 @@ def extract_regions(item: ImageData, regions_lobj: List[LocatedObject], regions_
             annotation = item.annotation
             if not suppress_empty or (annotation is not None):
                 item_new = ImageClassificationData(image_name=image_name_new, data=sub_bytes.getvalue(),
-                                                   annotation=annotation, metadata=item.get_metadata())
+                                                   annotation=annotation, metadata=safe_deepcopy(item.get_metadata()))
                 result.append((region_lobj, item_new, orig_dims))
 
         elif isinstance(item, ObjectDetectionData):
@@ -212,11 +213,11 @@ def extract_regions(item: ImageData, regions_lobj: List[LocatedObject], regions_
                 if separate_objects:
                     for new_object in new_objects:
                         item_new = ObjectDetectionData(image_name=image_name_new, data=sub_bytes.getvalue(),
-                                                       annotation=LocatedObjects([new_object]), metadata=item.get_metadata())
+                                                       annotation=LocatedObjects([new_object]), metadata=safe_deepcopy(item.get_metadata()))
                         result.append((region_lobj, item_new, orig_dims))
                 else:
                     item_new = ObjectDetectionData(image_name=image_name_new, data=sub_bytes.getvalue(),
-                                                   annotation=LocatedObjects(new_objects), metadata=item.get_metadata())
+                                                   annotation=LocatedObjects(new_objects), metadata=safe_deepcopy(item.get_metadata()))
                     result.append((region_lobj, item_new, orig_dims))
 
         elif isinstance(item, ImageSegmentationData):
@@ -229,14 +230,14 @@ def extract_regions(item: ImageData, regions_lobj: List[LocatedObject], regions_
                 if len(new_annotations.layers) == 0:
                     new_annotations = None
                 item_new = ImageSegmentationData(image_name=image_name_new, data=sub_bytes.getvalue(),
-                                                 annotation=new_annotations, metadata=item.get_metadata())
+                                                 annotation=new_annotations, metadata=safe_deepcopy(item.get_metadata()))
                 result.append((region_lobj, item_new, orig_dims))
 
         elif isinstance(item, DepthData):
             new_annotations = fit_matrix(region_lobj, item.annotation.data, suppress_empty)
             if not suppress_empty or (new_annotations is not None):
                 item_new = DepthData(image_name=image_name_new, data=sub_bytes.getvalue(),
-                                     annotation=DepthInformation(data=new_annotations), metadata=item.get_metadata())
+                                     annotation=DepthInformation(data=new_annotations), metadata=safe_deepcopy(item.get_metadata()))
                 result.append((region_lobj, item_new, orig_dims))
 
         else:
