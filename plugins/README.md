@@ -9,6 +9,7 @@
 * [crop](crop.md)
 * [crop-to-label](crop-to-label.md)
 * [enhance](enhance.md)
+* [exif-autorotate-annotations](exif-autorotate-annotations.md)
 * [fast-line-detection](fast-line-detection.md)
 * [find-contours](find-contours.md)
 * [find-contours-cv2](find-contours-cv2.md)

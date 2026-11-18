@@ -11,6 +11,7 @@ from ._code_detector import CodeDetector
 from ._crop import Crop
 from ._crop_to_label import CropToLabel
 from ._enhance import Enhance, ENHANCEMENTS, ENHANCEMENT_CONTRAST, ENHANCEMENT_COLOR, ENHANCEMENT_SHARPNESS, ENHANCEMENT_BRIGHTNESS
+from ._exif_autorotate_ann import ExifAutoRotateAnnotations
 from ._fast_line_detection import FastLineDetection
 from ._find_contours import FindContours, CONNECTIVITY, CONNECTIVITY_LOW, CONNECTIVITY_HIGH
 from ._find_contours_cv2 import FindContoursCV2
