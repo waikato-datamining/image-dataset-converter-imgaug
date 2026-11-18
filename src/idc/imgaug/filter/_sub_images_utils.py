@@ -169,6 +169,14 @@ def extract_regions(item: ImageData, regions_lobj: List[LocatedObject], regions_
             x1 = item.image_width - 1
         if y1 >= item.image_height:
             y1 = item.image_height - 1
+        if not (x0 < x1+1):
+            if logger is not None:
+                logger.warning("EXIF autorate issue? Left must be smaller than right (image/x0,y0,x1,y1): %s/%s" % (item.image_name, str((x0, y0, x1, y1))))
+            continue
+        if not (y0 < y1+1):
+            if logger is not None:
+                logger.warning("EXIF autorate issue? Top must be smaller than bottom (image/x0,y0,x1,y1): %s/%s" % (item.image_name, str((x0, y0, x1, y1))))
+            continue
         sub_image = pil.crop((x0, y0, x1+1, y1+1))
         orig_dims = LocatedObject(0, 0, sub_image.size[0], sub_image.size[1])
         sub_image = pad_image(sub_image, pad_width=pad_width, pad_height=pad_height)
