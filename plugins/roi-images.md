@@ -8,7 +8,7 @@ Extracts sub-images using the bbox of all the object detection annotations that 
 ```
 usage: roi-images [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
                   [-N LOGGER_NAME] [--skip] [--labels [LABELS ...]]
-                  [-S SUFFIX] [-f] [-b]
+                  [-S SUFFIX] [-f] [-1] [-b]
 
 Extracts sub-images using the bbox of all the object detection annotations
 that have matching labels. If no labels are specified, all annotations are
@@ -34,8 +34,11 @@ options:
                         -{INDEX})
   -f, --skip_failed     Removes images with no annotations or when failing to
                         extract objects. (default: False)
+  -1, --separate_objects
+                        Generates output with only a single annotation in each
+                        item. (default: False)
   -b, --blank_background
                         In case of polygon annotations, this flag enables
                         removing the background outside of the polygon.
-                        (default: False)
+                        Requires --separate_objects (default: False)
 ```

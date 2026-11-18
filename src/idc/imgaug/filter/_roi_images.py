@@ -19,7 +19,7 @@ class RegionOfInterestImages(BatchFilter):
     """
 
     def __init__(self, labels: List[str] = None, suffix: str = DEFAULT_SUFFIX,
-                 skip_failed: bool = None, blank_background: bool = None,
+                 skip_failed: bool = None, separate_objects: bool = False, blank_background: bool = None,
                  logger_name: str = None, logging_level: str = LOGGING_WARNING):
         """
         Initializes the filter.
@@ -30,6 +30,8 @@ class RegionOfInterestImages(BatchFilter):
         :type suffix: str
         :param skip_failed: whether to skip images with no annotations or when extraction fails
         :type skip_failed: bool
+        :param separate_objects: whether to separate the objects, ie only one annotation per output item
+        :type separate_objects: bool
         :param blank_background: whether to blank the background in case of polygons
         :type blank_background: bool
         :param logger_name: the name to use for the logger
@@ -41,6 +43,7 @@ class RegionOfInterestImages(BatchFilter):
         self.labels = labels
         self.suffix = suffix
         self.skip_failed = skip_failed
+        self.separate_objects = separate_objects
         self.blank_background = blank_background
 
     def name(self) -> str:
@@ -90,7 +93,8 @@ class RegionOfInterestImages(BatchFilter):
         parser.add_argument("--labels", type=str, default=None, help="The label(s) of the annotations to forward as sub-images, uses all annotations if not specified.", required=False, nargs="*")
         parser.add_argument("-S", "--suffix", type=str, default=DEFAULT_SUFFIX, help="The suffix pattern to use for the generated sub-images, available placeholders: " + "|".join(PLACEHOLDERS), required=False)
         parser.add_argument("-f", "--skip_failed", action="store_true", help="Removes images with no annotations or when failing to extract objects.", required=False)
-        parser.add_argument("-b", "--blank_background", action="store_true", help="In case of polygon annotations, this flag enables removing the background outside of the polygon.", required=False)
+        parser.add_argument("-1", "--separate_objects", action="store_true", help="Generates output with only a single annotation in each item.", required=False)
+        parser.add_argument("-b", "--blank_background", action="store_true", help="In case of polygon annotations, this flag enables removing the background outside of the polygon. Requires --separate_objects", required=False)
         return parser
 
     def _apply_args(self, ns: argparse.Namespace):
@@ -104,6 +108,7 @@ class RegionOfInterestImages(BatchFilter):
         self.labels = ns.labels
         self.suffix = ns.suffix
         self.skip_failed = ns.skip_failed
+        self.separate_objects = ns.separate_objects
         self.blank_background = ns.blank_background
 
     def initialize(self):
@@ -117,8 +122,12 @@ class RegionOfInterestImages(BatchFilter):
             self.suffix = DEFAULT_SUFFIX
         if self.skip_failed is None:
             self.skip_failed = False
+        if self.separate_objects is None:
+            self.separate_objects = False
         if self.blank_background is None:
             self.blank_background = False
+        if self.blank_background and not self.separate_objects:
+            raise Exception("Blanking the background requires --separate_objects")
 
     def _remove_background(self, item: ImageData):
         """
@@ -184,14 +193,15 @@ class RegionOfInterestImages(BatchFilter):
                 lobjs.append(o)
                 xyxys.append(locatedobject_to_xyxy(o))
 
-            sub_items = extract_regions(item, lobjs, xyxys, self.suffix,
-                                        False, False, self.logger())
+            sub_items = extract_regions(item, lobjs, xyxys, self.suffix, False, False, self.logger(),
+                                        separate_objects=self.separate_objects)
             # failed to process?
             if sub_items is None:
                 if not self.skip_failed:
                     result.append(item)
             else:
                 for _, sub_item, _ in sub_items:
+                    print("#ann:", len(sub_item.annotation))
                     if self.blank_background:
                         sub_item = self._remove_background(sub_item)
                     result.append(sub_item)

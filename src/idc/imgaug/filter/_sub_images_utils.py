@@ -127,7 +127,7 @@ def region_filename(path: str, regions_lobj: List[LocatedObject], regions_xyxy: 
 def extract_regions(item: ImageData, regions_lobj: List[LocatedObject], regions_xyxy: List[Tuple], suffix: str,
                     suppress_empty: bool, include_partial: bool, logger: logging.Logger,
                     pad_width: Optional[int] = None, pad_height: Optional[int] = None,
-                    min_partial_iou: float = 0.0) -> Optional[List[Tuple[LocatedObject, ImageData, LocatedObject]]]:
+                    min_partial_iou: float = 0.0, separate_objects: bool = False) -> Optional[List[Tuple[LocatedObject, ImageData, LocatedObject]]]:
     """
     Processes the image according to the defined regions and returns a list of tuples consisting of the located
     object for the region and the new image/annotations.
@@ -150,9 +150,11 @@ def extract_regions(item: ImageData, regions_lobj: List[LocatedObject], regions_
     :type pad_width: int
     :param pad_height: the height to pad to, return as is if None
     :type pad_height: int
-    :return: the list of tuples (located object of region, new image, located object of original dims)
     :param min_partial_iou: when including partial objdet annotations, only keep if IoU between partial and full objdet is at least this threshold, ignored if 0
     :type min_partial_iou: float
+    :param separate_objects: in case of object detection annotations, return one sub-item per object
+    :type separate_objects: bool
+    :return: the list of tuples (located object of region, new image, located object of original dims)
     :rtype: list
     """
     result = []
@@ -199,9 +201,15 @@ def extract_regions(item: ImageData, regions_lobj: List[LocatedObject], regions_
                         else:
                             new_objects.append(ann_lobj_new)
             if not suppress_empty or (len(new_objects) > 0):
-                item_new = ObjectDetectionData(image_name=image_name_new, data=sub_bytes.getvalue(),
-                                               annotation=LocatedObjects(new_objects), metadata=item.get_metadata())
-                result.append((region_lobj, item_new, orig_dims))
+                if separate_objects:
+                    for new_object in new_objects:
+                        item_new = ObjectDetectionData(image_name=image_name_new, data=sub_bytes.getvalue(),
+                                                       annotation=LocatedObjects([new_object]), metadata=item.get_metadata())
+                        result.append((region_lobj, item_new, orig_dims))
+                else:
+                    item_new = ObjectDetectionData(image_name=image_name_new, data=sub_bytes.getvalue(),
+                                                   annotation=LocatedObjects(new_objects), metadata=item.get_metadata())
+                    result.append((region_lobj, item_new, orig_dims))
 
         elif isinstance(item, ImageSegmentationData):
             new_annotations = ImageSegmentationAnnotations(list(), dict())
